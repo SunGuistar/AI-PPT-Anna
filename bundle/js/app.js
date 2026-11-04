@@ -145,14 +145,6 @@ var SlideForgeApp = (function () {
     renderOutline();
   }
 
-  function addOutlinePage() {
-    readOutlineFromDom();
-    outline.slides.push({ title: "新页面", points: ["在这里输入要点"] });
-    renderOutline();
-    var list = $("#sf-outline-list");
-    list.scrollTop = list.scrollHeight;
-  }
-
   async function handleOutlineUpdate() {
     if (busy) return;
     var feedback = ($("#sf-outline-feedback").value || "").trim();
@@ -286,8 +278,6 @@ var SlideForgeApp = (function () {
     });
 
     // outline 区按钮
-    var addBtn = $("#sf-outline-add");
-    if (addBtn) addBtn.addEventListener("click", addOutlinePage);
     var updBtn = $("#sf-outline-update");
     if (updBtn) updBtn.addEventListener("click", handleOutlineUpdate);
     var cfmBtn = $("#sf-outline-confirm");

@@ -91,8 +91,18 @@ var SlideForgeSlides = (function () {
     };
     tb.appendChild(btn("\u25C0 上一页", "sf-btn-nav", function () { navigate(-1); }));
     tb.appendChild(btn("\u270E 编辑", "sf-btn-ghost", function () { SlideForgeEditor.toggleEdit(); }));
-    tb.appendChild(btn("+ 添加页", "sf-btn-ghost", function () { SlideForgeEditor.addSlide(); }));
-    tb.appendChild(btn("\u2699 主题", "sf-btn-ghost", function () { cycleTheme(); }));
+    var themeSel = document.createElement("select");
+    themeSel.className = "sf-select sf-theme-select";
+    themeSel.title = "切换主题";
+    SlideForgeAI.FALLBACK_THEMES.forEach(function (t) {
+      var opt = document.createElement("option");
+      opt.value = t.name;
+      opt.textContent = t.name;
+      themeSel.appendChild(opt);
+    });
+    if (deck.theme && deck.theme.name) themeSel.value = deck.theme.name;
+    themeSel.addEventListener("change", function () { setThemeByName(themeSel.value); });
+    tb.appendChild(themeSel);
     tb.appendChild(btn("\u25B6 下一页", "sf-btn-nav", function () { navigate(1); }));
 
     var counter = document.createElement("span");
@@ -129,10 +139,10 @@ var SlideForgeSlides = (function () {
     render();
   }
 
-  function cycleTheme() {
-    var fb = SlideForgeAI.FALLBACK_THEMES;
-    var cur = fb.findIndex(function (t) { return t.name === state.deck.theme.name; });
-    state.deck.theme = fb[(cur + 1) % fb.length];
+  function setThemeByName(name) {
+    var t = SlideForgeAI.FALLBACK_THEMES.find(function (x) { return x.name === name; });
+    if (!t || !state.deck) return;
+    state.deck.theme = t;
     SlideForgeEditor.save();
     render();
   }
@@ -144,7 +154,7 @@ var SlideForgeSlides = (function () {
     render: render,
     navigate: navigate,
     goTo: goTo,
-    cycleTheme: cycleTheme,
+    setThemeByName: setThemeByName,
     applyTheme: applyTheme,
     // 供导出器离屏测量：返回第 i 页幻灯片的 DOM（不挂载、不改状态）
     renderSlideDom: renderSlide

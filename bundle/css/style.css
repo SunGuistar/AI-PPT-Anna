@@ -242,3 +242,6 @@ button { font-family: inherit; }
 .sf-oc-del { background: none; border: 1px solid var(--sf-border); color: #f87171; border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 0.8rem; }
 .sf-outline-actions { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
 .sf-outline-btns { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+
+/* 工具栏主题下拉 */
+.sf-toolbar .sf-theme-select { width: auto; min-width: 140px; flex: 0 1 auto; padding: 6px 30px 6px 10px; font-size: 0.85rem; }
