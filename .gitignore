@@ -4,3 +4,9 @@ __pycache__/
 *.egg-info/
 bundle/anna-tool-ids.js
 .anna/app.json
+.anna/executas.lock.json
+executas/focus-flow/.anna/
+executas/focus-flow/dist/
+executas/focus-flow/dist-anna/
+executas/focus-flow/build/
+executas/focus-flow/*.spec

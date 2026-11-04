@@ -5,6 +5,9 @@
   "description": "基于 Anna 平台 LLM 的 AI PPT 应用：输入主题与补充要求，自动生成封面 + 3 页正文 + 1 页总结的结构化内容，支持在线预览与文字修改，一键导出统一简约排版的可编辑 PPTX 文件。",
   "category": "productivity",
   "bundled_executas": {
-    "focus-flow": { "path": "./executas/focus-flow" }
-  }
+    "focus-flow": {
+      "path": "./executas/focus-flow"
+    }
+  },
+  "version": "0.2.1"
 }

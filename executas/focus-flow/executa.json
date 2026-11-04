@@ -1,9 +1,46 @@
 {
   "slug": "focus-flow",
   "name": "focus-flow",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "executa_type": "tool",
   "description": "focus-flow Anna App 的 Python Executa：deck JSON 校验、python-pptx 渲染 PPTX、APS 文件上传。",
-  "tool_id": "tool-dev-focus-flow",
-  "type": "python"
+  "tool_id": "tool-arctic-focus-flow-gqm57t3n",
+  "type": "python",
+  "enabled": true,
+  "distribution": {
+    "active": "binary",
+    "profiles": {
+      "local": {
+        "type": "local",
+        "supports_protocol": true
+      },
+      "binary": {
+        "type": "binary",
+        "executable_name": "tool-arctic-focus-flow-gqm57t3n",
+        "supports_protocol": true,
+        "binary_urls": {
+          "darwin-arm64": {
+            "url": "https://github.com/SunGuistar/AI-PPT-Anna/releases/download/focus-flow-v0.2.1/tool-arctic-focus-flow-gqm57t3n-darwin-arm64.tar.gz",
+            "entrypoint": "bin/tool-arctic-focus-flow-gqm57t3n",
+            "format": "tar.gz"
+          },
+          "darwin-x86_64": {
+            "url": "https://github.com/SunGuistar/AI-PPT-Anna/releases/download/focus-flow-v0.2.1/tool-arctic-focus-flow-gqm57t3n-darwin-x86_64.tar.gz",
+            "entrypoint": "bin/tool-arctic-focus-flow-gqm57t3n",
+            "format": "tar.gz"
+          },
+          "linux-x86_64": {
+            "url": "https://github.com/SunGuistar/AI-PPT-Anna/releases/download/focus-flow-v0.2.1/tool-arctic-focus-flow-gqm57t3n-linux-x86_64.tar.gz",
+            "entrypoint": "bin/tool-arctic-focus-flow-gqm57t3n",
+            "format": "tar.gz"
+          },
+          "windows-x86_64": {
+            "url": "https://github.com/SunGuistar/AI-PPT-Anna/releases/download/focus-flow-v0.2.1/tool-arctic-focus-flow-gqm57t3n-windows-x86_64.tar.gz",
+            "entrypoint": "bin/tool-arctic-focus-flow-gqm57t3n.exe",
+            "format": "tar.gz"
+          }
+        }
+      }
+    }
+  }
 }
