@@ -14,19 +14,19 @@ var SlideForgeAI = (function () {
   };
 
   var FALLBACK_THEMES = [
-    { name: "Midnight Forge", bg: "#0f172a", fg: "#e2e8f0", accent: "#6366f1",
+    { name: "深邃靛蓝", bg: "#0f172a", fg: "#e2e8f0", accent: "#6366f1",
       gradient: "linear-gradient(135deg,#0f172a 0%,#312e81 60%,#6366f1 100%)",
       headingFont: "Georgia, serif", bodyFont: "system-ui, sans-serif" },
-    { name: "Coral Bloom", bg: "#fff7ed", fg: "#1c1917", accent: "#f43f5e",
+    { name: "珊瑚绯红", bg: "#fff7ed", fg: "#1c1917", accent: "#f43f5e",
       gradient: "linear-gradient(135deg,#fff7ed 0%,#ffe4e6 60%,#fda4af 100%)",
       headingFont: "Georgia, serif", bodyFont: "system-ui, sans-serif" },
-    { name: "Forest Ledger", bg: "#f0fdf4", fg: "#14532d", accent: "#16a34a",
+    { name: "森系账本", bg: "#f0fdf4", fg: "#14532d", accent: "#16a34a",
       gradient: "linear-gradient(135deg,#f0fdf4 0%,#dcfce7 60%,#86efac 100%)",
       headingFont: "system-ui, sans-serif", bodyFont: "Georgia, serif" },
-    { name: "Ocean Ink", bg: "#eff6ff", fg: "#0c4a6e", accent: "#0284c7",
+    { name: "海洋墨蓝", bg: "#eff6ff", fg: "#0c4a6e", accent: "#0284c7",
       gradient: "linear-gradient(135deg,#eff6ff 0%,#e0f2fe 60%,#7dd3fc 100%)",
       headingFont: "system-ui, sans-serif", bodyFont: "system-ui, sans-serif" },
-    { name: "Ember Slate", bg: "#18181b", fg: "#fafafa", accent: "#f59e0b",
+    { name: "余烬暗岩", bg: "#18181b", fg: "#fafafa", accent: "#f59e0b",
       gradient: "linear-gradient(135deg,#18181b 0%,#27272a 60%,#78716c 100%)",
       headingFont: "Georgia, serif", bodyFont: "system-ui, sans-serif" }
   ];

@@ -29,7 +29,7 @@ var SlideForgeOutline = (function () {
       "要求：",
       "1. slides 必须恰好 " + count + " 页；第 1 页为封面（title=主标题，points[0]=副标题，points[1]=署名/日期，可省略）；最后一页为总结页（points 为总结要点）。",
       "2. 中间每页 points 为 3~5 条完整句子，信息具体、可直接上屏。",
-      "3. theme 颜色贴合主题。",
+      "3. theme 颜色贴合主题；headingFont 和 bodyFont 必须使用中文系统可用的常见中文字体（如 SimHei、Microsoft YaHei、SimSun、KaiTi、DengXian 等），不要使用仅在少数设备上可用的英文字体。",
     ].filter(Boolean).join("\n");
   }
 
@@ -55,7 +55,7 @@ var SlideForgeOutline = (function () {
       "2. 仅当用户明确要求添加/删除/重排页面时才改变结构。",
       "3. 用户手动修改过的内容视为最新版本，不得回退。",
       "4. 不要因为初始页数是 " + req.count + " 就把用户后来增加或减少的页面恢复回去。",
-      "5. 输出完整的新大纲 JSON（含全部页面与 theme），不要输出解释。",
+      "5. 输出完整的新大纲 JSON（含全部页面与 theme），不要输出解释。theme 的字体保持中文系统常见字体。",
     ].join("\n");
   }
 

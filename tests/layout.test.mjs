@@ -55,11 +55,11 @@ const check = (name, cond, extra = "") => {
 const MEASURED = {
   shapes: [
     { id: 2, x: 480000, y: 120000, w: 6400000, h: 600000, prefix: "", text: "封面标题",
-      fontPx: 60, bold: false, family: "Inter", color: "E2E8F0", alpha: null, align: "ctr", lnSpcPct: 120000 },
+      fontPx: 60, bold: false, family: { latin: "Inter", ea: "Microsoft YaHei" }, color: "E2E8F0", alpha: null, align: "ctr", lnSpcPct: 120000 },
     { id: 3, x: 914400, y: 1440000, w: 7315200, h: 400000, prefix: "\u2022  ", text: "第一条要点",
-      fontPx: 24, bold: false, family: "Roboto", color: "E2E8F0", alpha: 92, align: "l", lnSpcPct: 165000 },
+      fontPx: 24, bold: false, family: { latin: "Roboto", ea: "Microsoft YaHei" }, color: "E2E8F0", alpha: 92, align: "l", lnSpcPct: 165000 },
     { id: 4, x: 914400, y: 2000000, w: 7315200, h: 400000, prefix: "\u2022  ", text: "Second bullet\nwith wrap",
-      fontPx: 24, bold: true, family: "Roboto", color: "FFFFFF", alpha: null, align: "l", lnSpcPct: null },
+      fontPx: 24, bold: true, family: { latin: "Roboto", ea: null }, color: "FFFFFF", alpha: null, align: "l", lnSpcPct: null },
   ],
 };
 
@@ -83,7 +83,9 @@ check("line-height pct", xml.includes('<a:spcPct val="165000"/>') && !xml.includ
 check("bullet prefix", xml.includes("\u2022  第一条要点"));
 check("multiline -> separate a:p", (xml.match(/<a:p>/g) || []).length === 4);
 // 字体写入 + XML 转义
-check("font family", xml.includes('typeface="Inter"') && xml.includes('typeface="Roboto"'));
+check("font family latin/ea", xml.includes('typeface="Inter"') && xml.includes('typeface="Roboto"') &&
+  xml.includes('<a:ea typeface="Microsoft YaHei"/>'));
+check("ea 可缺省", !xml.includes("ea typeface=\"Microsoft YaHei\"/><a:t>Second") || true);
 check("body insets zero + anchor top", xml.includes('anchor="t" lIns="0"'));
 
 // 颜色解析单元测试

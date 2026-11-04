@@ -100,6 +100,14 @@ var SlideForgeSlides = (function () {
       opt.textContent = t.name;
       themeSel.appendChild(opt);
     });
+    // 默认显示当前主题；当前主题不在预设列表（如 AI 生成主题）时追加一个动态项
+    var presetNames = SlideForgeAI.FALLBACK_THEMES.map(function (t) { return t.name; });
+    if (deck.theme && deck.theme.name && presetNames.indexOf(deck.theme.name) === -1) {
+      var cur = document.createElement("option");
+      cur.value = deck.theme.name;
+      cur.textContent = deck.theme.name;
+      themeSel.appendChild(cur);
+    }
     if (deck.theme && deck.theme.name) themeSel.value = deck.theme.name;
     themeSel.addEventListener("change", function () { setThemeByName(themeSel.value); });
     tb.appendChild(themeSel);

@@ -197,16 +197,28 @@ var SlideForgeExport = (function () {
   var PX2PT = 0.75;
 
   // 从 CSS 字体列表选出浏览器实际可用字体（document.fonts.check）
+  // 常见中文字体：PowerPoint/WPS 与中文系统普遍可用，作为英文主题字体的回退
+  var CJK_FONTS = ["SimHei", "Microsoft YaHei", "PingFang SC", "DengXian", "SimSun", "KaiTi"];
+
+  // 返回 { latin, ea }：拉丁字符用主题字体，东亚字符用中文字体，
+  // 对应 OOXML 的 a:latin / a:ea，保证 PPT 中文与预览字体族一致。
   function pickFamily(cssFamily, doc) {
     var names = (cssFamily || "").split(",").map(function (s) {
       return s.trim().replace(/^["']+|["']+$/g, "");
     }).filter(Boolean);
+    var latin = names[0] || "Calibri";
     for (var i = 0; i < names.length; i++) {
       try {
-        if (doc.fonts && doc.fonts.check('16px "' + names[i] + '"')) return names[i];
+        if (doc.fonts && doc.fonts.check('16px "' + names[i] + '"')) { latin = names[i]; break; }
       } catch (e) { /* ignore */ }
     }
-    return names[0] || "Calibri";
+    var ea = null;
+    for (var j = 0; j < CJK_FONTS.length; j++) {
+      try {
+        if (doc.fonts && doc.fonts.check('16px "' + CJK_FONTS[j] + '"')) { ea = CJK_FONTS[j]; break; }
+      } catch (e) { /* ignore */ }
+    }
+    return { latin: latin, ea: ea };
   }
 
   // "rgb(226,232,240)" / "rgba(226,232,240,0.92)" -> {hex, alphaPct}
@@ -311,7 +323,9 @@ var SlideForgeExport = (function () {
       var paras = (s.prefix + s.text).split("\n").map(function (l) {
         return '<a:p><a:pPr algn="' + s.align + '">' + lnSpc + '</a:pPr><a:r><a:rPr lang="zh-CN" sz="' + sz +
           '" b="' + (s.bold ? "1" : "0") + '" dirty="0">' + fill +
-          '<a:latin typeface="' + escXml(s.family) + '"/></a:rPr><a:t>' + escXml(l) + "</a:t></a:r></a:p>";
+          '<a:latin typeface="' + escXml(s.family.latin) + '"/>' +
+          (s.family.ea ? '<a:ea typeface="' + escXml(s.family.ea) + '"/>' : '') +
+          '</a:rPr><a:t>' + escXml(l) + "</a:t></a:r></a:p>";
       }).join("");
       return '<p:sp><p:nvSpPr><p:cNvPr id="' + s.id + '" name=""/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>' +
         '<p:spPr><a:xfrm><a:off x="' + s.x + '" y="' + s.y + '"/><a:ext cx="' + s.w + '" cy="' + s.h + '"/></a:xfrm>' +
