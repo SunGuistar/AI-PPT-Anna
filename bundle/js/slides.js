@@ -102,6 +102,9 @@ var SlideForgeSlides = (function () {
 
     tb.appendChild(btn("\u2B73 下载 PPT", "sf-btn-action", function () { SlideForgeExport.downloadPPTX(); }));
     tb.appendChild(btn("\u21B5 新建", "sf-btn-ghost", function () { SlideForgeApp.goHome(); }));
+    var backBtn = btn("↩ 返回大纲", "sf-btn-ghost", function () { /* 由 data-sf-action 委托处理 */ });
+    backBtn.dataset.sfAction = "backOutline";
+    tb.appendChild(backBtn);
   }
 
   function render() {

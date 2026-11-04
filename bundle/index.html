@@ -51,7 +51,7 @@
         <textarea class="sf-input sf-extra" id="sf-extra" rows="3"
           placeholder="补充说明（可选）：请输入对 PPT 的补充要求，例如重点介绍哪些内容、希望采用什么风格、是否需要案例或总结等……"
           aria-label="补充说明"></textarea>
-        <button class="sf-btn sf-btn-primary" id="sf-generate-btn" type="submit">生成 PPT &#9889;</button>
+        <button class="sf-btn sf-btn-primary" id="sf-generate-btn" type="submit">生成大纲 &#9889;</button>
       </form>
       <div class="sf-chips" aria-label="Example topics">
         <button class="sf-example" type="button" data-topic="人工智能在教育中的应用">试试：AI 教育</button>
@@ -64,6 +64,27 @@
 
     <section class="sf-recent" id="sf-saved" aria-label="Recent decks"></section>
   </main>
+
+
+  <!-- ================= Outline editor view ================= -->
+  <section class="sf-outline-shell" id="sf-outline" aria-label="Outline editor">
+    <div class="sf-outline-head">
+      <h2>大纲编辑</h2>
+      <span class="sf-outline-meta" id="sf-outline-meta"></span>
+    </div>
+    <div class="sf-outline-list" id="sf-outline-list"></div>
+    <div class="sf-outline-actions">
+      <button class="sf-btn sf-btn-ghost" id="sf-outline-add" type="button">+ 添加页面</button>
+      <textarea class="sf-input" id="sf-outline-feedback" rows="3"
+        placeholder="补充修改要求（可选），例如：第三页增加实际案例，删除第四页，最后一页重点介绍未来发展趋势……"
+        aria-label="补充修改要求"></textarea>
+      <div class="sf-outline-btns">
+        <button class="sf-btn sf-btn-ghost" id="sf-outline-back" type="button">返回输入</button>
+        <button class="sf-btn sf-btn-primary" id="sf-outline-update" type="button">更新大纲</button>
+        <button class="sf-btn sf-btn-primary" id="sf-outline-confirm" type="button">确认大纲，生成 PPT</button>
+      </div>
+    </div>
+  </section>
 
   <!-- ================= Editor view ================= -->
   <section class="sf-editor-shell" id="sf-editor" aria-label="Presentation editor">
@@ -84,6 +105,7 @@
   <script src="js/slides.js"></script>
   <script src="js/editor.js"></script>
   <script src="js/export.js"></script>
+  <script src="js/outline.js"></script>
   <script src="js/app.js"></script>
   <script src="js/anna-adapter.js"></script>
 </body>

@@ -3,6 +3,7 @@
 基于 Anna 平台的**纯前端** AI 演示文稿应用 AIppt：输入主题、页数、受众与语气，Anna AI 生成完整幻灯片（含主题配色），支持逐页预览、内联文字编辑、增删/排序幻灯片、切换主题，一键导出可在 PowerPoint / WPS 中继续编辑的 PPTX。
 
 - **纯前端**：原生 HTML/CSS/JavaScript，零依赖、零构建，无任何后端或插件
+- **大纲工作流**：AI 生成内容型大纲 → 手动编辑/增删/排序 → 自然语言反复更新（保留初始要求与手动修改）→ 确认后纯前端生成 PPT（确认后零 AI 调用）
 - **AI**：Anna Host API `anna.llm.complete`
 - **PPTX 导出**：浏览器端手写 OOXML + ZIP（零依赖），文字/形状原生可编辑
 - **文件交付**：Anna 官方 APS 接口（`files.upload_init` → 直连 PUT → `upload_finalize` → `files.download`）

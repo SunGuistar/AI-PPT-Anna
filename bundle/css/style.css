@@ -225,3 +225,20 @@ button { font-family: inherit; }
 @media print {
   .sf-header, .sf-toolbar, .sf-footer, .sf-notes, .sf-key-hint { display: none !important; }
 }
+
+/* ---------- Outline editor ---------- */
+.sf-outline-shell { display: none; max-width: 960px; margin: 0 auto 48px; padding: 0 24px; }
+.sf-outline-head { display: flex; align-items: baseline; gap: 14px; margin: 8px 0 14px; }
+.sf-outline-head h2 { margin: 0; font-size: 1.2rem; }
+.sf-outline-meta { color: var(--sf-ui-muted); font-size: 0.85rem; }
+.sf-outline-list { display: flex; flex-direction: column; gap: 12px; max-height: 52vh; overflow-y: auto; padding-right: 4px; }
+.sf-outline-card { background: var(--sf-surface-strong); border: 1px solid var(--sf-border); border-radius: var(--sf-radius); padding: 12px 14px; }
+.sf-outline-card .sf-oc-head { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.sf-outline-card .sf-oc-num { color: var(--sf-ui-muted); font-size: 0.8rem; min-width: 44px; }
+.sf-outline-card input.sf-oc-title { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--sf-border); color: var(--sf-fg); border-radius: 8px; padding: 8px 10px; font-size: 0.98rem; font-weight: 600; font-family: inherit; }
+.sf-outline-card textarea.sf-oc-points { width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid var(--sf-border); color: var(--sf-fg); border-radius: 8px; padding: 8px 10px; font-size: 0.92rem; line-height: 1.55; font-family: inherit; resize: vertical; }
+.sf-oc-move { background: none; border: 1px solid var(--sf-border); color: var(--sf-ui-muted); border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 0.8rem; }
+.sf-oc-move:hover { color: var(--sf-fg); }
+.sf-oc-del { background: none; border: 1px solid var(--sf-border); color: #f87171; border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 0.8rem; }
+.sf-outline-actions { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+.sf-outline-btns { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
