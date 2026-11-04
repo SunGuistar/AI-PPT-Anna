@@ -31,6 +31,26 @@ MANIFEST = {
                 "additionalProperties": False,
             },
         },
+        {
+            "name": "export_pptx",
+            "description": (
+                "Render a deck JSON ({title, subtitle?, slides:[{title, "
+                "bullets:[str]}]}) into a uniformly styled PPTX with "
+                "python-pptx, upload it to the app's APS file scope, and "
+                "return the APS path for the frontend to download."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "deck": {
+                        "type": "object",
+                        "description": "Deck content produced by the LLM and edited by the user.",
+                    },
+                },
+                "required": ["deck"],
+                "additionalProperties": False,
+            },
+        },
     ],
 }
 
@@ -70,24 +90,39 @@ def upload_to_app_files(data: bytes, path: str, content_type: str) -> dict:
     """Upload bytes into the app's APS file scope via reverse-RPC."""
     init = host_call(
         "files/upload_begin",
-        {"path": path, "content_type": content_type, "size_bytes": len(data)},
+        {
+            "path": path,
+            "content_type": content_type,
+            "size_bytes": len(data),
+            # Production parity: executa files/* travel on the executa's own
+            # storage_token with app-scope semantics; the hosting app's
+            # iframe reads the same path back via files.download.
+            "scope": "app",
+        },
     )
     put_url = init.get("put_url") or init.get("upload_url")
     if not put_url:
         raise RuntimeError(f"files/upload_begin returned no put_url: {sorted(init)}")
-    req = urllib.request.Request(
-        put_url,
-        data=data,
-        headers={str(k): str(v) for k, v in (init.get("headers") or {}).items()},
-        method="PUT",
-    )
-    with urllib.request.urlopen(req, timeout=60) as resp:
-        etag = resp.headers.get("ETag")
+    headers = {str(k): str(v) for k, v in (init.get("headers") or {}).items()}
+    # Direct connection, no proxy chain: presigned object-store PUTs must
+    # reach the origin untouched, with the signed headers exactly as issued.
+    # Transient handshake drops are retried.
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    etag = None
+    last_err: Exception | None = None
+    for attempt in range(3):
+        try:
+            req = urllib.request.Request(put_url, data=data, headers=headers, method="PUT")
+            with opener.open(req, timeout=15) as resp:
+                etag = resp.headers.get("ETag")
+            break
+        except Exception as e:  # noqa: BLE001
+            last_err = e
     if not etag:
-        raise RuntimeError("PUT to presigned upload URL returned no ETag")
+        raise RuntimeError(f"PUT to presigned upload URL failed after retries: {last_err}")
     done = host_call(
         "files/upload_complete",
-        {"path": path, "etag": etag, "size_bytes": len(data)},
+        {"path": path, "etag": etag, "size_bytes": len(data), "scope": "app"},
     )
     return {"path": done.get("path", path), "size_bytes": len(data)}
 
@@ -95,7 +130,7 @@ def upload_to_app_files(data: bytes, path: str, content_type: str) -> dict:
 def build_sample_pptx() -> bytes:
     """Fixed two-slide deck (stage 1 placeholder content)."""
     from pptx import Presentation
-    from pptx.util import Inches, Pt
+    from pptx.util import Pt
 
     prs = Presentation()
     slide = prs.slides.add_slide(prs.slide_layouts[0])
@@ -113,10 +148,101 @@ def build_sample_pptx() -> bytes:
     ):
         body.add_paragraph().text = line
 
-    # Keep font sizes reasonable on the default template.
     for s in prs.slides:
         if s.shapes.title is not None:
             s.shapes.title.text_frame.paragraphs[0].runs[0].font.size = Pt(40)
+
+    buf = io.BytesIO()
+    prs.save(buf)
+    return buf.getvalue()
+
+
+PPTX_MIME = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+
+
+def sanitize_deck(raw: dict) -> dict:
+    """Validate and normalize the deck JSON.
+
+    Raises ValueError with a user-facing message on structural problems;
+    coerces minor type issues (numbers -> str, str -> [str]) silently.
+    """
+    if not isinstance(raw, dict):
+        raise ValueError("deck 必须是 JSON 对象")
+
+    def text(value, field: str, limit: int) -> str:
+        if value is None:
+            return ""
+        if not isinstance(value, str):
+            value = str(value)
+        value = value.strip()
+        return value[:limit]
+
+    title = text(raw.get("title"), "title", 120) or "未命名演示文稿"
+    subtitle = text(raw.get("subtitle"), "subtitle", 200)
+
+    slides_raw = raw.get("slides")
+    if not isinstance(slides_raw, list) or not slides_raw:
+        raise ValueError("deck.slides 必须是非空数组")
+
+    slides = []
+    for i, s in enumerate(slides_raw, 1):
+        if not isinstance(s, dict):
+            raise ValueError(f"第 {i} 页必须是对象")
+        s_title = text(s.get("title"), f"slides[{i}].title", 120) or f"第 {i} 页"
+        bullets_raw = s.get("bullets")
+        if bullets_raw is None:
+            bullets_raw = []
+        if isinstance(bullets_raw, str):
+            bullets_raw = [bullets_raw]
+        if not isinstance(bullets_raw, list):
+            raise ValueError(f"第 {i} 页的 bullets 必须是数组")
+        bullets = []
+        for b in bullets_raw[:6]:
+            bt = text(b, f"slides[{i}].bullets", 200)
+            if bt:
+                bullets.append(bt)
+        slides.append({"title": s_title, "bullets": bullets})
+    return {"title": title, "subtitle": subtitle, "slides": slides}
+
+
+def build_deck_pptx(deck: dict) -> bytes:
+    """Render the deck with one unified, minimal style: 16:9, plain fonts."""
+    from pptx import Presentation
+    from pptx.util import Inches, Pt
+
+    prs = Presentation()
+    prs.slide_width = Inches(13.333)
+    prs.slide_height = Inches(7.5)
+
+    # Title slide.
+    slide = prs.slides.add_slide(prs.slide_layouts[0])
+    slide.shapes.title.text = deck["title"]
+    title_p = slide.shapes.title.text_frame.paragraphs[0]
+    title_p.runs[0].font.size = Pt(40)
+    title_p.runs[0].font.bold = True
+    sub = slide.placeholders[1].text_frame
+    sub.text = deck["subtitle"] or ""
+    for p in sub.paragraphs:
+        for r in p.runs:
+            r.font.size = Pt(20)
+
+    # Content slides: same layout, same sizes, left-aligned.
+    for s in deck["slides"]:
+        slide = prs.slides.add_slide(prs.slide_layouts[1])
+        slide.shapes.title.text = s["title"]
+        tp = slide.shapes.title.text_frame.paragraphs[0]
+        tp.runs[0].font.size = Pt(30)
+        tp.runs[0].font.bold = True
+        body = slide.placeholders[1].text_frame
+        body.word_wrap = True
+        if s["bullets"]:
+            body.text = s["bullets"][0]
+            for line in s["bullets"][1:]:
+                body.add_paragraph().text = line
+            for p in body.paragraphs:
+                for r in p.runs:
+                    r.font.size = Pt(18)
+                p.space_after = Pt(10)
 
     buf = io.BytesIO()
     prs.save(buf)
@@ -146,6 +272,23 @@ def invoke(method: str, args: dict) -> dict:
                 "content_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
                 "python_pptx_version": pptx.__version__,
                 "slide_count": 2,
+                **uploaded,
+            },
+        }
+    if method == "export_pptx":
+        import pptx
+
+        deck = sanitize_deck(args.get("deck"))
+        data = build_deck_pptx(deck)
+        safe_name = "".join(c for c in deck["title"] if c.isalnum() or c in " _-").strip() or "deck"
+        uploaded = upload_to_app_files(data, path="pptx/deck.pptx", content_type=PPTX_MIME)
+        return {
+            "success": True,
+            "data": {
+                "filename": f"{safe_name[:60]}.pptx",
+                "content_type": PPTX_MIME,
+                "python_pptx_version": pptx.__version__,
+                "slide_count": len(deck["slides"]) + 1,
                 **uploaded,
             },
         }

@@ -3,12 +3,50 @@
   <head>
     <meta charset="utf-8" />
     <title>focus-flow</title>
+    <style>
+      :root { font-family: system-ui, "Segoe UI", sans-serif; }
+      body { margin: 12px; color: #222; }
+      h1 { font-size: 18px; margin: 0 0 10px; }
+      label { display: block; font-size: 13px; margin: 8px 0 4px; color: #555; }
+      input[type="text"], textarea {
+        width: 100%; box-sizing: border-box; padding: 6px 8px;
+        border: 1px solid #ccc; border-radius: 4px; font-size: 14px;
+      }
+      textarea { resize: vertical; }
+      button {
+        padding: 6px 14px; border: 1px solid #888; border-radius: 4px;
+        background: #fff; font-size: 14px; cursor: pointer; margin-right: 8px;
+      }
+      button:disabled { opacity: 0.5; cursor: default; }
+      button.primary { background: #2563eb; border-color: #2563eb; color: #fff; }
+      .row { margin: 10px 0; }
+      #status { font-size: 13px; color: #555; white-space: pre-wrap; }
+      #status.err { color: #b91c1c; }
+      .slide-card {
+        border: 1px solid #ddd; border-radius: 6px;
+        padding: 8px 10px; margin: 10px 0;
+      }
+      .slide-card .num { font-size: 12px; color: #888; margin-bottom: 4px; }
+      .slide-card input { font-weight: 600; margin-bottom: 6px; }
+      #preview { margin-top: 12px; }
+    </style>
     <script src="./app.js" type="module"></script>
   </head>
   <body>
-    <h1>focus-flow</h1>
-    <button id="pptx-btn">生成 PPTX</button>
-    <button id="llm-btn">LLM 自检</button>
-    <pre id="status">…</pre>
+    <h1>AI PPT</h1>
+
+    <label for="topic">PPT 主题</label>
+    <input type="text" id="topic" placeholder="例如：人工智能在教育中的应用" />
+
+    <label for="extra">补充要求（可选）</label>
+    <textarea id="extra" rows="2" placeholder="例如：面向中学生家长，语气通俗，突出案例"></textarea>
+
+    <div class="row">
+      <button id="gen-btn" class="primary">生成内容</button>
+      <button id="export-btn" disabled>导出 PPTX</button>
+    </div>
+
+    <div id="status">…</div>
+    <div id="preview"></div>
   </body>
 </html>

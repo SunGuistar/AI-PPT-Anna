@@ -1,5 +1,6 @@
 {
   "schema": 2,
+  "host_capabilities": ["aps.files"],
   "required_executas": [
     {
       "tool_id": "tool-dev-focus-flow"
