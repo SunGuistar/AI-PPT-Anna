@@ -1,0 +1,2 @@
+[console_scripts]
+tool-dev-focus-flow = focus_flow_plugin:main
