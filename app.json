@@ -1,7 +1,7 @@
 {
   "name": "AIppt",
   "slug": "my-focus-flow",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "tagline": "输入主题，AI 生成多页 PPT，在线编辑并导出可编辑 PPTX",
   "description": "基于 Anna 平台 LLM 的纯前端 AI PPT 应用（UI 基于开源 SlideForge，MIT）：输入主题、页数、受众与语气，AI 生成完整幻灯片（含主题配色），支持逐页预览、内联文字编辑、增删与排序幻灯片、切换主题，一键导出可在 PowerPoint / WPS 中继续编辑的 PPTX 文件。无后端、无插件，文件经 Anna APS 官方接口交付。",
   "category": "productivity"
