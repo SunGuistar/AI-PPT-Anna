@@ -1,13 +1,8 @@
 {
   "name": "focus-flow",
   "slug": "my-focus-flow",
-  "tagline": "输入主题，AI 生成 5 页 PPT 并导出可编辑 PPTX",
-  "description": "基于 Anna 平台 LLM 的 AI PPT 应用：输入主题与补充要求，自动生成封面 + 3 页正文 + 1 页总结的结构化内容，支持在线预览与文字修改，一键导出统一简约排版的可编辑 PPTX 文件。",
-  "category": "productivity",
-  "bundled_executas": {
-    "focus-flow": {
-      "path": "./executas/focus-flow"
-    }
-  },
-  "version": "0.2.1"
+  "version": "0.3.0",
+  "tagline": "输入主题，AI 生成多页 PPT，在线编辑并导出可编辑 PPTX",
+  "description": "基于 Anna 平台 LLM 的纯前端 AI PPT 应用（UI 基于开源 SlideForge，MIT）：输入主题、页数、受众与语气，AI 生成完整幻灯片（含主题配色），支持逐页预览、内联文字编辑、增删与排序幻灯片、切换主题，一键导出可在 PowerPoint / WPS 中继续编辑的 PPTX 文件。无后端、无插件，文件经 Anna APS 官方接口交付。",
+  "category": "productivity"
 }

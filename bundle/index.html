@@ -1,53 +1,79 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="utf-8" />
-    <title>focus-flow</title>
-    <style>
-      :root { font-family: system-ui, "Segoe UI", sans-serif; }
-      body { margin: 12px; color: #222; }
-      h1 { font-size: 18px; margin: 0 0 10px; }
-      label { display: block; font-size: 13px; margin: 8px 0 4px; color: #555; }
-      input[type="text"], textarea {
-        width: 100%; box-sizing: border-box; padding: 6px 8px;
-        border: 1px solid #ccc; border-radius: 4px; font-size: 14px;
-      }
-      textarea { resize: vertical; }
-      button {
-        padding: 6px 14px; border: 1px solid #888; border-radius: 4px;
-        background: #fff; font-size: 14px; cursor: pointer; margin-right: 8px;
-      }
-      button:disabled { opacity: 0.5; cursor: default; }
-      button.primary { background: #2563eb; border-color: #2563eb; color: #fff; }
-      .row { margin: 10px 0; }
-      #status { font-size: 13px; color: #555; white-space: pre-wrap; }
-      #status.err { color: #b91c1c; }
-      .slide-card {
-        border: 1px solid #ddd; border-radius: 6px;
-        padding: 8px 10px; margin: 10px 0;
-      }
-      .slide-card .num { font-size: 12px; color: #888; margin-bottom: 4px; }
-      .slide-card input { font-weight: 600; margin-bottom: 6px; }
-      #preview { margin-top: 12px; }
-    </style>
-    <script src="./anna-tool-ids.js" defer></script>
-    <script src="./app.js" type="module"></script>
-  </head>
-  <body>
-    <h1>AI PPT</h1>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>focus-flow · AI PPT</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
 
-    <label for="topic">PPT 主题</label>
-    <input type="text" id="topic" placeholder="例如：人工智能在教育中的应用" />
+  <!-- ================= Header ================= -->
+  <header class="sf-header" role="banner">
+    <a class="sf-brand" href="#top" aria-label="focus-flow home">
+      <img src="assets/logo.png" alt="SlideForge logo" width="44" height="44">
+      <span>
+        <span class="sf-brand-name">focus-flow</span>
+        <span class="sf-brand-tag">AI PPT · Powered by SlideForge (MIT)</span>
+      </span>
+    </a>
+  </header>
 
-    <label for="extra">补充要求（可选）</label>
-    <textarea id="extra" rows="2" placeholder="例如：面向中学生家长，语气通俗，突出案例"></textarea>
+  <!-- ================= Home view ================= -->
+  <main id="sf-home">
+    <section class="sf-hero" id="top" aria-label="Introduction">
+      <h1>输入主题，AI 生成<span>可编辑</span>的演示文稿</h1>
+      <p class="sf-lead">由 Anna 平台 AI 驱动：生成多页幻灯片，逐页预览、在线修改，一键导出可在 PowerPoint / WPS 中继续编辑的 PPTX。</p>
+    </section>
 
-    <div class="row">
-      <button id="gen-btn" class="primary">生成内容</button>
-      <button id="export-btn" disabled>导出 PPTX</button>
+    <section class="sf-form-card" aria-label="Deck generator">
+      <h2>创建你的演示文稿</h2>
+      <form id="sf-form" class="sf-form-row">
+        <input class="sf-input" id="sf-topic" type="text" placeholder="例如：人工智能在教育中的应用" required aria-label="Presentation topic">
+        <input class="sf-input" id="sf-count" type="number" min="3" max="20" value="5" style="max-width:90px;" aria-label="Number of slides">
+        <input class="sf-input" id="sf-audience" type="text" placeholder="受众（可选）" aria-label="Target audience">
+        <select class="sf-select" id="sf-tone" aria-label="Tone">
+          <option value="professional">语气：专业</option>
+          <option value="casual">语气：轻松</option>
+          <option value="academic">语气：学术</option>
+          <option value="persuasive">语气：说服</option>
+          <option value="educational">语气：科普</option>
+        </select>
+        <button class="sf-btn sf-btn-primary" id="sf-generate-btn" type="submit">生成幻灯片 &#9889;</button>
+      </form>
+      <div class="sf-chips" aria-label="Example topics">
+        <button class="sf-example" type="button" data-topic="人工智能在教育中的应用">试试：AI 教育</button>
+        <button class="sf-example" type="button" data-topic="远程办公的最佳实践">试试：远程办公</button>
+        <button class="sf-example" type="button" data-topic="量子计算入门">试试：量子计算</button>
+        <button class="sf-example" type="button" data-topic="新员工入职培训">试试：入职培训</button>
+      </div>
+      <div class="sf-status" id="sf-status" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="sf-recent" id="sf-saved" aria-label="Recent decks"></section>
+  </main>
+
+  <!-- ================= Editor view ================= -->
+  <section class="sf-editor-shell" id="sf-editor" aria-label="Presentation editor">
+    <div class="sf-stage-wrap">
+      <div class="sf-stage" id="sf-stage" role="region" aria-label="Current slide"></div>
+      <div class="sf-toolbar" id="sf-toolbar" role="toolbar" aria-label="Slide controls"></div>
     </div>
+  </section>
 
-    <div id="status">…</div>
-    <div id="preview"></div>
-  </body>
+  <!-- ================= Footer ================= -->
+  <footer class="sf-footer" role="contentinfo">
+    <span>UI based on <a href="https://github.com/vincenzo-afk/SlideForge" target="_blank" rel="noopener">SlideForge</a> &middot; MIT License &middot; AI by Anna Platform</span>
+  </footer>
+
+  <!-- ===== Scripts (order matters, no bundler) ===== -->
+  <script src="js/config.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/slides.js"></script>
+  <script src="js/editor.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/anna-adapter.js"></script>
+</body>
 </html>
