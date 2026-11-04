@@ -20,11 +20,11 @@ fi
 # (.anna/executa.json, written by `apps publish`); fall back to the dev
 # placeholder in executa.json for offline builds.
 PYBIN="$([ -x .venv/Scripts/python.exe ] && echo .venv/Scripts/python.exe || { command -v python3 || command -v python || command -v py; })"
-META="$("$PYBIN" -c "import json;d=json.load(open('executa.json',encoding='utf-8'));t=json.load(open('.anna/executa.json',encoding='utf-8'))['tool_id'] if __import__('os').path.exists('.anna/executa.json') else d['tool_id'];print(json.dumps([t,d.get('version') or '0.0.0',d.get('name') or d['tool_id'],d.get('description') or ''],ensure_ascii=False))")"
-TOOL_ID="$(printf '%s' "$META" | "$PYBIN" -c "import json,sys;print(json.load(sys.stdin)[0])")"
-VERSION="$(printf '%s' "$META" | "$PYBIN" -c "import json,sys;print(json.load(sys.stdin)[1])")"
-DISPLAY_NAME="$(printf '%s' "$META" | "$PYBIN" -c "import json,sys;print(json.load(sys.stdin)[2])")"
-DESCRIPTION="$(printf '%s' "$META" | "$PYBIN" -c "import json,sys;print(json.load(sys.stdin)[3])")"
+# ensure_ascii=True keeps this payload pure ASCII — Windows CI consoles default
+# to cp1252 and would crash printing CJK to stdout.
+META="$("$PYBIN" -c "import json;d=json.load(open('executa.json',encoding='utf-8'));t=json.load(open('.anna/executa.json',encoding='utf-8'))['tool_id'] if __import__('os').path.exists('.anna/executa.json') else d['tool_id'];print(json.dumps([t,d.get('version') or '0.0.0',d.get('name') or d['tool_id'],d.get('description') or ''],ensure_ascii=True))")"
+TOOL_ID="$(printf '%s' "$META" | "$PYBIN" -c "import json,sys;print(json.loads(sys.stdin.read())[0])")"
+VERSION="$(printf '%s' "$META" | "$PYBIN" -c "import json,sys;print(json.loads(sys.stdin.read())[1])")"
 
 OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
 ARCH="$(uname -m)"
@@ -84,7 +84,6 @@ $PYINSTALLER_ENV -m PyInstaller \
   --exclude-module asyncio \
   --exclude-module zoneinfo \
   --exclude-module csv \
-  --exclude-module calendar \
   --exclude-module plistlib \
   --exclude-module pydoc_data \
   --exclude-module xmlrpc \
@@ -117,9 +116,12 @@ cp "$BINARY" "$STAGE/bin/$TOOL_ID$EXE_SUFFIX"
 chmod 0755 "$STAGE/bin/$TOOL_ID$EXE_SUFFIX"
 
 echo "==> Writing archive manifest"
-"$PYBIN" - "$STAGE/manifest.json" "$TOOL_ID" "$VERSION" "$DISPLAY_NAME" "$DESCRIPTION" "bin/$TOOL_ID$EXE_SUFFIX" <<'PY'
+"$PYBIN" - "$STAGE/manifest.json" "$TOOL_ID" "$VERSION" "$META" "bin/$TOOL_ID$EXE_SUFFIX" <<'PY'
 import json, sys
-manifest_path, tool_id, version, display_name, description, entrypoint = sys.argv[1:7]
+manifest_path, tool_id, version, meta_json, entrypoint = sys.argv[1:6]
+# meta_json is ASCII-safe (ensure_ascii) — parse to recover the original
+# (possibly CJK) display name / description without console encoding issues.
+_, _, display_name, description = json.loads(meta_json)
 manifest = {
     "name": tool_id,
     "display_name": display_name,
@@ -140,7 +142,11 @@ ARCHIVE="$OUT_DIR/$TOOL_ID-$PLATFORM.tar.gz"
 echo "==> Creating archive: $ARCHIVE"
 ( cd "$STAGE" && tar czf "../$TOOL_ID-$PLATFORM.tar.gz" . )
 
-SHA256="$(sha256sum "$ARCHIVE" | awk '{print $1}')"
+if command -v sha256sum >/dev/null 2>&1; then
+  SHA256="$(sha256sum "$ARCHIVE" | awk '{print $1}')"
+else
+  SHA256="$(shasum -a 256 "$ARCHIVE" | awk '{print $1}')"
+fi
 SIZE="$(wc -c < "$ARCHIVE" | tr -d ' ')"
 echo
 echo "Built archive: $ARCHIVE"
