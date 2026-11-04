@@ -49,6 +49,20 @@ var SlideForgeApp = (function () {
     $("#sf-editor").style.display = name === "slides" ? "block" : "none";
   }
 
+  // AI 大纲调用：解析失败时自动发起一次修复重试（仅失败时消耗第二次调用）
+  async function callOutlineAi(makePrompt) {
+    var text = await AnnaBridge.aiJson(makePrompt(), 4000);
+    try {
+      return SlideForgeOutline.normalizeOutline(text);
+    } catch (e) {
+      var repair = "你上次没有输出合法 JSON。请重新输出，只输出 JSON 对象本身，" +
+        "不要 markdown 代码块、不要任何解释。\n\n原始要求：\n" + makePrompt() +
+        "\n\n你上次的输出：\n" + String(text).slice(0, 1500);
+      var text2 = await AnnaBridge.aiJson(repair, 4000);
+      return SlideForgeOutline.normalizeOutline(text2); // 仍失败则抛出，走既有错误处理
+    }
+  }
+
   /* ================= input 阶段 ================= */
 
   async function handleGenerate(e) {
@@ -68,9 +82,9 @@ var SlideForgeApp = (function () {
     showStatus("正在调用 Anna AI 生成内容型大纲，请稍候…");
     var seq = ++requestSeq;
     try {
-      var text = await AnnaBridge.aiJson(SlideForgeOutline.buildInitialPrompt(initialRequest));
+      var makePrompt = function () { return SlideForgeOutline.buildInitialPrompt(initialRequest); };
+      var next = await callOutlineAi(makePrompt);
       if (seq !== requestSeq) return; // 过期响应
-      var next = SlideForgeOutline.normalizeOutline(text);
       outline = { slides: next.slides, theme: mergeTheme(outline && outline.theme, next.theme) };
       renderOutline();
       showView("outline");
@@ -166,9 +180,12 @@ var SlideForgeApp = (function () {
     showStatus("正在调用 Anna AI 更新大纲…");
     var seq = ++requestSeq;
     try {
-      var text = await AnnaBridge.aiJson(SlideForgeOutline.buildUpdatePrompt(initialRequest, outline, feedback));
+      var snapshotReq = initialRequest, snapshotOutline = outline, snapshotFeedback = feedback;
+      var makeUpdatePrompt = function () {
+        return SlideForgeOutline.buildUpdatePrompt(snapshotReq, snapshotOutline, snapshotFeedback);
+      };
+      var next = await callOutlineAi(makeUpdatePrompt);
       if (seq !== requestSeq) return;
-      var next = SlideForgeOutline.normalizeOutline(text);
       outline = { slides: next.slides, theme: mergeTheme(outline.theme, next.theme) };
       renderOutline();
       $("#sf-outline-feedback").value = "";

@@ -48,12 +48,12 @@
   /* ---------------- AI: Anna llm.complete ---------------- */
 
   // 通用 JSON 模式 AI 调用：返回模型输出文本（由调用方解析/校验）。
-  async function aiJson(userText) {
+  async function aiJson(userText, maxTokens) {
     if (!anna) throw new Error("Anna runtime 未连接");
     var res = await anna.llm.complete({
       systemPrompt: "你是专业的演示文稿策划。你只输出合法 JSON，不输出任何解释性文字。",
       messages: [{ role: "user", content: { type: "text", text: userText } }],
-      maxTokens: 2000,
+      maxTokens: maxTokens || 4000,
       temperature: 0.7,
     });
     var text = res.content && res.content.text ? res.content.text : "";

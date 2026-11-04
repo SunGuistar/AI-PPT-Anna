@@ -207,5 +207,15 @@ st = vm.runInContext("SlideForgeApp._state()", ctx);
 check("e2e: theme 合并——name 更新、accent 保留",
   st.outline.theme.name === "AI 改名" && st.outline.theme.accent === "#00D4FF");
 
+// 修复重试：AI 首次输出非法 JSON 时自动修复一次
+let repairN = 0;
+aiResponder = () => { repairN++; return repairN === 1 ? "这不是合法 JSON" : JSON.stringify(FIXED_OUTLINE); };
+byId["sf-outline-feedback"].value = "触发修复路径";
+const callsBeforeRepair = aiCalls;
+await byId["sf-outline-update"]._l["click"][0]();
+st = vm.runInContext("SlideForgeApp._state()", ctx);
+check("修复重试：非法输出自动修复成功（AI 调用 +2，大纲恢复 4 页）",
+  aiCalls === callsBeforeRepair + 2 && st.outline.slides.length === 4);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
