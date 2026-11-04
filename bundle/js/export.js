@@ -72,7 +72,7 @@ var SlideForgeExport = (function () {
     '<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" ' +
     'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" ' +
     'xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">' +
-    '<p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>' +
+    '<p:cSld>%BG%<p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>' +
     '<p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>' +
     "%BODY%" +
     "</p:spTree></p:cSld></p:sld>";
@@ -91,11 +91,61 @@ var SlideForgeExport = (function () {
     return (c.r << 16) | (c.g << 8) | c.b;
   }
 
-  function textShape(id, x, y, cx, cy, text, sizePt, bold, color, align) {
+  /* ---- theme mapping (preview -> OOXML) ---- */
+
+  // "Georgia, serif" / '"Segoe UI", sans-serif' -> first font name
+  function cssFontName(fontCss, fallback) {
+    var name = (fontCss || "").split(",")[0].trim().replace(/^["']+|["']+$/g, "");
+    return name || fallback || "Calibri";
+  }
+
+  function normalizeHex(hex) {
+    var h = (hex || "").replace("#", "");
+    if (h.length === 3 || h.length === 4) h = h.split("").map(function (c) { return c + c; }).join("");
+    return h.slice(0, 6).toUpperCase();
+  }
+
+  // CSS linear-gradient -> OOXML gradFill. Angle verified against the OOXML
+  // spec anchor: CSS 180deg (to bottom) == OOXML ang 5400000 (90 deg,
+  // clockwise from 3 o'clock); hence ooxml_deg = (css_deg - 90) mod 360.
+  function parseLinearGradient(css) {
+    var m = /linear-gradient\(\s*(-?\d+(?:\.\d+)?)deg\s*,([^)]+)\)/i.exec(css || "");
+    if (!m) return null;
+    var cssDeg = parseFloat(m[1]);
+    var ooxmlDeg = (((cssDeg - 90) % 360) + 360) % 360;
+    var stops = m[2].split(",").map(function (part) {
+      var mm = /(#[0-9a-fA-F]{3,8})\s*(\d+(?:\.\d+)?)?/.exec(part.trim());
+      return mm ? { color: normalizeHex(mm[1]), pos: mm[2] !== undefined ? parseFloat(mm[2]) : null } : null;
+    }).filter(Boolean);
+    if (!stops.length) return null;
+    if (stops[0].pos === null) stops[0].pos = 0;
+    if (stops[stops.length - 1].pos === null) stops[stops.length - 1].pos = 100;
+    stops.forEach(function (s, idx) { if (s.pos === null) s.pos = stops[idx - 1].pos; });
+    return { ang: String(Math.round(ooxmlDeg * 60000)), stops: stops };
+  }
+
+  // Per-slide background: theme.gradient (gradFill) or solid theme.bg.
+  function slideBackgroundXml(theme) {
+    var g = parseLinearGradient(theme.gradient);
+    var fill;
+    if (g) {
+      var gs = g.stops.map(function (s) {
+        var pos = Math.max(0, Math.min(100000, Math.round(s.pos * 1000)));
+        return '<a:gs pos="' + pos + '"><a:srgbClr val="' + s.color + '"/></a:gs>';
+      }).join("");
+      fill = '<a:gradFill><a:gsLst>' + gs + '</a:gsLst><a:lin ang="' + g.ang + '" scaled="1"/></a:gradFill>';
+    } else {
+      fill = '<a:solidFill><a:srgbClr val="' + normalizeHex(theme.bg || "#FFFFFF") + '"/></a:solidFill>';
+    }
+    return '<p:bg><p:bgPr>' + fill + '</p:bgPr></p:bg>';
+  }
+
+  function textShape(id, x, y, cx, cy, text, sizePt, bold, color, align, fontFace) {
+    var latin = '<a:latin typeface="' + escXml(fontFace || "Calibri") + '"/>';
     var lines = text.split("\n").map(function (l) {
       return '<a:p><a:pPr algn="' + align + '"/><a:r><a:rPr lang="en-US" sz="' + (sizePt * 100) +
-        '" b="' + (bold ? "1" : "0") + '"><a:solidFill><a:srgbClr val="' + color.replace("#", "") +
-        '"/></a:solidFill><a:latin typeface="Calibri"/></a:rPr><a:t>' + escXml(l) + "</a:t></a:r></a:p>";
+        '" b="' + (bold ? "1" : "0") + '"><a:solidFill><a:srgbClr val="' + normalizeHex(color) +
+        '"/></a:solidFill>' + latin + '</a:rPr><a:t>' + escXml(l) + "</a:t></a:r></a:p>";
     }).join("");
     return '<p:sp><p:nvSpPr><p:cNvPr id="' + id + '" name=""/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>' +
       '<p:spPr><a:xfrm><a:off x="' + x + '" y="' + y + '"/><a:ext cx="' + cx + '" cy="' + cy + '"/></a:xfrm>' +
@@ -103,27 +153,172 @@ var SlideForgeExport = (function () {
       '<p:txBody><a:bodyPr wrap="square" anchor="ctr"/><a:lstStyle/>' + lines + "</p:txBody></p:sp>";
   }
 
-  function buildSlideXml(slide, i, total, accent) {
-    var accentClr = accent.replace("#", "");
+  var SLIDE_H = 5143500;
+
+  function buildSlideXml(slide, i, total, theme) {
+    var fg = theme.fg || "#1F2937";
+    var accentClr = normalizeHex(theme.accent || "#6366F1");
+    var headingFont = cssFontName(theme.headingFont);
+    var bodyFont = cssFontName(theme.bodyFont);
     var titleSize = (i === 0 || i === total - 1) ? 30 : 20;
     var body = "";
     var idc = 2;
-    // title
-    body += textShape(idc++, 457200, 228600, 8229600, 914400, slide.title, titleSize, true, accentClr, "ctr");
-    if (i === 0) {
-      if (slide.content[0]) body += textShape(idc++, 1371600, 2286000, 6400800, 914400, slide.content[0], 16, false, "404040", "ctr");
-      if (slide.content[1]) body += textShape(idc++, 1371600, 2971800, 6400800, 685800, slide.content[1], 12, false, "808080", "ctr");
-    } else if (i === total - 1) {
-      if (slide.content[0]) body += textShape(idc++, 1371600, 2286000, 6400800, 914400, slide.content[0], 16, false, "404040", "ctr");
-      if (slide.content[1]) body += textShape(idc++, 1371600, 2971800, 6400800, 914400, slide.content[1], 12, false, "808080", "ctr");
+    // title (fg color + heading font, matching the preview)
+    body += textShape(idc++, 457200, 228600, 8229600, 914400, slide.title, titleSize, true, fg, "ctr", headingFont);
+    if (i === 0 || i === total - 1) {
+      if (slide.content[0]) body += textShape(idc++, 1371600, 2286000, 6400800, 914400, slide.content[0], 16, false, fg, "ctr", bodyFont);
+      if (slide.content[1]) body += textShape(idc++, 1371600, 2971800, 6400800, 914400, slide.content[1], 12, false, fg, "ctr", bodyFont);
     } else {
-      var y = 1371600;
+      // bullets: dynamic vertical spacing so up to 8 items never overflow
+      var n = Math.max(slide.content.length, 1);
+      var startY = 1371600;
+      var avail = SLIDE_H - startY - 457200; // leave a 0.5" bottom margin
+      var step = Math.min(685800, Math.floor(avail / n));
+      var boxH = Math.max(457200, Math.min(685800, step));
+      var y = startY;
       slide.content.forEach(function (c) {
-        body += textShape(idc++, 914400, y, 7315200, 685800, "\u2022  " + c, 14, false, "404040", "l");
-        y += 685800;
+        body += textShape(idc++, 914400, y, 7315200, boxH, "\u2022  " + c, 14, false, fg, "l", bodyFont);
+        y += step;
       });
     }
-    return PPTX_SLIDE.replace("%BODY%", body);
+    return PPTX_SLIDE.replace("%BG%", slideBackgroundXml(theme)).replace("%BODY%", body);
+  }
+
+  /* ==================================================================
+   * DOM 测量驱动导出（预览 -> PPTX 排版一致）
+   * 在固定 960x540 px 的离屏舞台中渲染每一页，量取真实布局：
+   * getBoundingClientRect（位置/尺寸）、getComputedStyle（字体、
+   * 字号、粗细、颜色、对齐、行距），再按 1px = 9525 EMU、
+   * 1px = 0.75pt 换算为 PPTX 坐标。无 DOM 环境自动回退到上面的
+   * 数据驱动 buildSlideXml。
+   * ================================================================== */
+
+  var PX2EMU = 9525;   // 960x540 px 舞台 <-> 9144000x5143500 EMU 幻灯片
+  var PX2PT = 0.75;
+
+  // 从 CSS 字体列表选出浏览器实际可用字体（document.fonts.check）
+  function pickFamily(cssFamily, doc) {
+    var names = (cssFamily || "").split(",").map(function (s) {
+      return s.trim().replace(/^["']+|["']+$/g, "");
+    }).filter(Boolean);
+    for (var i = 0; i < names.length; i++) {
+      try {
+        if (doc.fonts && doc.fonts.check('16px "' + names[i] + '"')) return names[i];
+      } catch (e) { /* ignore */ }
+    }
+    return names[0] || "Calibri";
+  }
+
+  // "rgb(226,232,240)" / "rgba(226,232,240,0.92)" -> {hex, alphaPct}
+  function cssColorToHex(cssColor) {
+    var m = /rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)(?:[,\s/]+([\d.]+))?\s*\)/.exec(cssColor || "");
+    if (!m) return { hex: "1F2937", alpha: null };
+    function h(n) { return ("0" + Math.max(0, Math.min(255, Math.round(n))).toString(16)).slice(-2).toUpperCase(); }
+    return {
+      hex: h(+m[1]) + h(+m[2]) + h(+m[3]),
+      alpha: m[4] !== undefined ? Math.max(0, Math.min(100, Math.round(parseFloat(m[4]) * 100))) : null,
+    };
+  }
+
+  var ALIGN_MAP = { left: "l", center: "ctr", right: "r", start: "l", end: "r", justify: "l" };
+
+  /**
+   * 离屏测量整副 deck。返回 null 表示环境不支持（无 DOM/测量失败），
+   * 调用方应回退到数据驱动导出。
+   */
+  async function measureDeck(deck) {
+    if (typeof document === "undefined" || !document.body || !SlideForgeSlides.renderSlideDom) return null;
+    try {
+      if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      SlideForgeSlides.applyTheme(deck.theme);
+
+      var wrap = document.createElement("div");
+      wrap.style.cssText = "position:fixed;left:-24000px;top:0;display:block;visibility:hidden;width:960px;height:540px;";
+      var stage = document.createElement("div");
+      stage.className = "sf-stage";
+      stage.style.width = "960px";
+      stage.style.height = "540px";
+      wrap.appendChild(stage);
+      document.body.appendChild(wrap);
+
+      var ROLE_SEL = [
+        [".sf-slide-title-text", "text", ""],
+        [".sf-subtitle", "text", ""],
+        [".sf-author", "text", ""],
+        [".sf-closing-line", "text", ""],
+        [".sf-takeaway", "text", ""],
+        [".sf-bullet", "bullet", "\u2022  "],
+      ];
+
+      var slides = deck.slides.map(function (slide, i) {
+        stage.innerHTML = "";
+        var el = SlideForgeSlides.renderSlideDom(deck, i);
+        stage.appendChild(el);
+        var sRect = stage.getBoundingClientRect();
+        var shapes = [];
+        var idc = 2;
+        ROLE_SEL.forEach(function (role) {
+          var nodes = el.querySelectorAll(role[0]);
+          Array.prototype.forEach.call(nodes, function (node) {
+            var text = node.textContent;
+            if (!text || !text.trim()) return;
+            var r = node.getBoundingClientRect();
+            var cs = getComputedStyle(node);
+            var color = cssColorToHex(cs.color);
+            var gutterPx = 0;
+            if (role[1] === "bullet") {
+              // li 的 rect 不含 ::marker，把列表左内边距并入文本框，使 "• " 前缀落在 marker 位置
+              var list = node.parentElement ? getComputedStyle(node.parentElement) : null;
+              if (list) gutterPx = parseFloat(list.paddingLeft) || 0;
+            }
+            var lhPx = parseFloat(cs.lineHeight);
+            shapes.push({
+              id: idc++,
+              x: Math.round((r.left - sRect.left - gutterPx) * PX2EMU),
+              y: Math.round((r.top - sRect.top) * PX2EMU),
+              w: Math.round((r.width + gutterPx) * PX2EMU),
+              h: Math.max(Math.round(r.height * PX2EMU), Math.round(parseFloat(cs.fontSize) * PX2EMU * 1.2)),
+              prefix: role[2],
+              text: text.trim(),
+              fontPx: parseFloat(cs.fontSize),
+              bold: (parseInt(cs.fontWeight, 10) || 400) >= 600,
+              family: pickFamily(cs.fontFamily, document),
+              color: color.hex,
+              alpha: color.alpha,
+              align: ALIGN_MAP[cs.textAlign] || "l",
+              lnSpcPct: isFinite(lhPx) && lhPx > 0 ? Math.round((lhPx / parseFloat(cs.fontSize)) * 100000) : null,
+            });
+          });
+        });
+        return { shapes: shapes };
+      });
+
+      document.body.removeChild(wrap);
+      return { slides: slides };
+    } catch (e) {
+      try { if (wrap && wrap.parentNode) wrap.parentNode.removeChild(wrap); } catch (_) {}
+      return null;
+    }
+  }
+
+  // 由测量数据构建单页 slide XML（背景仍由 theme 生成）
+  function buildSlideFromMeasured(m) {
+    var body = m.shapes.map(function (s) {
+      var sz = Math.round(s.fontPx * PX2PT * 100);
+      var fill = '<a:solidFill><a:srgbClr val="' + s.color + '"' +
+        (s.alpha !== null ? '><a:alpha val="' + s.alpha * 1000 + '"/></a:srgbClr></a:solidFill>' : '/></a:solidFill>');
+      var lnSpc = s.lnSpcPct ? '<a:lnSpc><a:spcPct val="' + s.lnSpcPct + '"/></a:lnSpc>' : "";
+      var paras = (s.prefix + s.text).split("\n").map(function (l) {
+        return '<a:p><a:pPr algn="' + s.align + '">' + lnSpc + '</a:pPr><a:r><a:rPr lang="zh-CN" sz="' + sz +
+          '" b="' + (s.bold ? "1" : "0") + '" dirty="0">' + fill +
+          '<a:latin typeface="' + escXml(s.family) + '"/></a:rPr><a:t>' + escXml(l) + "</a:t></a:r></a:p>";
+      }).join("");
+      return '<p:sp><p:nvSpPr><p:cNvPr id="' + s.id + '" name=""/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>' +
+        '<p:spPr><a:xfrm><a:off x="' + s.x + '" y="' + s.y + '"/><a:ext cx="' + s.w + '" cy="' + s.h + '"/></a:xfrm>' +
+        '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>' +
+        '<p:txBody><a:bodyPr wrap="square" anchor="t" lIns="0" tIns="0" rIns="0" bIns="0"/><a:lstStyle/>' + paras + "</p:txBody></p:sp>";
+    }).join("");
+    return PPTX_SLIDE.replace("%BG%", "%BG%").replace("%BODY%", body);
   }
 
   /* Minimal ZIP writer (store, no compression) with CRC-32. */
@@ -219,7 +414,7 @@ var SlideForgeExport = (function () {
     return out;
   }
 
-  function downloadPPTX() {
+  async function downloadPPTX() {
     var deck = SlideForgeSlides.getDeck();
     if (!deck) return;
     var entries = [];
@@ -258,9 +453,16 @@ var SlideForgeExport = (function () {
       '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
       '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster" Target="../slideMasters/slideMaster1.xml"/>' +
       "</Relationships>";
+    // 优先使用浏览器实测布局；测量不可用时回退数据驱动排版
+    var measured = null;
+    try { measured = await measureDeck(deck); } catch (e) { measured = null; }
+    if (measured && !measured.slides.some(function (s) { return s.shapes.length > 0; })) measured = null;
+
     var slideIds = "";
     deck.slides.forEach(function (s, i) {
-      var xml = buildSlideXml(s, i, deck.slides.length, deck.theme.accent);
+      var xml = measured
+        ? buildSlideFromMeasured(measured.slides[i]).replace("%BG%", slideBackgroundXml(deck.theme))
+        : buildSlideXml(s, i, deck.slides.length, deck.theme);
       entries.push({ name: "ppt/slides/slide" + (i + 1) + ".xml", data: strToBytes(xml), crc: crc32(strToBytes(xml)) });
       entries.push({ name: "ppt/slides/_rels/slide" + (i + 1) + ".xml.rels", data: strToBytes(slideRels), crc: crc32(strToBytes(slideRels)) });
       slideIds += '<p:sldId id="' + (255 + i) + '" r:id="rId' + (i + 2) + '"/>';
@@ -327,5 +529,12 @@ var SlideForgeExport = (function () {
     URL.revokeObjectURL(url);
   }
 
-  return { printPDF: printPDF, downloadPPTX: downloadPPTX };
+  return {
+    printPDF: printPDF,
+    downloadPPTX: downloadPPTX,
+    // 测试钩子：无 DOM 环境下直接验证测量构建器的换算逻辑
+    _buildFromMeasured: buildSlideFromMeasured,
+    _cssColorToHex: cssColorToHex,
+    _measureDeck: measureDeck,
+  };
 })();

@@ -143,6 +143,8 @@ var SlideForgeSlides = (function () {
     navigate: navigate,
     goTo: goTo,
     cycleTheme: cycleTheme,
-    applyTheme: applyTheme
+    applyTheme: applyTheme,
+    // 供导出器离屏测量：返回第 i 页幻灯片的 DOM（不挂载、不改状态）
+    renderSlideDom: renderSlide
   };
 })();

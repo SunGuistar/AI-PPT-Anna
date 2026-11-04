@@ -1,0 +1,18 @@
+{
+  "slides": [
+    { "title": "人工智能在教育领域", "content": ["赋能教育，智见未来", "focus-flow 团队 · 2024"], "notes": "" },
+    { "title": "一个非常长的标题用于验证换行效果：人工智能如何深度重塑未来十年的全球教育生态与人才培养模式", "content": ["长标题应自然换行且不被截断", "副标题位置与预览一致"], "notes": "" },
+    { "title": "核心应用场景（8 条要点防溢出验证）", "content": ["自适应学习平台", "智能辅导与答疑系统", "自动化作业批改", "教学质量数据分析", "虚拟现实沉浸式课堂", "教育内容自动生成", "学习情绪识别与干预", "家校协同智能沟通"], "notes": "" },
+    { "title": "Mixed 中英文混排与多行正文", "content": ["First bullet: AI-powered personalized learning paths 智能学习路径", "第二条：跨语言内容生成与实时翻译 across languages", "第三条要点验证多行文本的换行与行距表现是否符合预览"], "notes": "" },
+    { "title": "谢谢聆听", "content": ["欢迎交流与探讨", "让我们共同探索智慧教育的未来"], "notes": "" }
+  ],
+  "theme": {
+    "name": "科技蓝",
+    "accent": "#00D4FF",
+    "bg": "#0F2027",
+    "fg": "#E2E8F0",
+    "gradient": "linear-gradient(135deg,#0F2027 0%,#203A43 50%,#2C5364 100%)",
+    "headingFont": "Inter",
+    "bodyFont": "Roboto"
+  }
+}

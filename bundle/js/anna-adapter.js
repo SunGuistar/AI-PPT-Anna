@@ -83,8 +83,20 @@
     var init = await anna.files.upload_init({ path: path, content_type: mime, size: uint8.length });
     var putUrl = init.put_url || init.upload_url;
     var headers = init.headers || {};
-    var resp = await fetch(putUrl, { method: "PUT", headers: headers, body: uint8 });
-    if (!resp.ok) throw new Error("上传 PPTX 失败: HTTP " + resp.status);
+    // 本机网络到对象存储偶发失败：直连 PUT 带重试
+    var resp = null, lastErr = null;
+    for (var attempt = 1; attempt <= 3; attempt++) {
+      try {
+        resp = await fetch(putUrl, { method: "PUT", headers: headers, body: uint8 });
+        if (!resp.ok) throw new Error("HTTP " + resp.status);
+        break;
+      } catch (e) {
+        lastErr = e;
+        resp = null;
+        if (attempt < 3) await new Promise(function (r) { setTimeout(r, attempt * 1000); });
+      }
+    }
+    if (!resp) throw new Error("上传 PPTX 失败（已重试 3 次）: " + (lastErr && lastErr.message ? lastErr.message : lastErr));
     var etag = resp.headers.get("ETag");
     if (!etag) throw new Error("上传 PPTX 失败: 无 ETag");
     await anna.files.upload_finalize({ path: path, etag: etag, size_bytes: uint8.length });

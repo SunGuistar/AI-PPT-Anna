@@ -135,12 +135,26 @@ var SlideForgeApp = (function () {
     document.addEventListener("keydown", onKeyDown);
     onRoute();
 
+
+  // ?sample=1 — 加载固定样例 deck（免 AI 调用，用于导出效果验收）
+  if (/[?&]sample=1/.test(location.search)) {
+    fetch("js/sample-deck.json").then(function (r) { return r.json(); }).then(function (d) {
+      var deck = SlideForgeAI.normalizeDeck(JSON.stringify(d), d.slides.length);
+      deck.topic = "固定样例（排版验收）";
+      SlideForgeEditor.save();
+      SlideForgeSlides.loadDeck(deck);
+      renderEditor();
+      showStatus("样例已加载，点击 ⭳ PPTX 导出验收文件。");
+    }).catch(function (e) { showStatus("样例加载失败: " + e.message, true); });
+  }
+
     // warn if no key configured and user tries to generate
     if (!SlideForgeConfig.GEMINI_API_KEY && !SlideForgeConfig.OPENAI_API_KEY) {
       var hint = $("#sf-key-hint");
       if (hint) hint.style.display = "";
     }
   }
+
 
   document.addEventListener("DOMContentLoaded", init);
 
