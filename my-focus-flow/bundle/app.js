@@ -1,8 +1,15 @@
-// focus-flow stage 2: AI PPT — topic -> LLM deck JSON -> editable preview -> PPTX export.
+// focus-flow stage 3: AI PPT — topic -> LLM deck JSON -> editable preview (1:1
+// with the exported pages) -> PPTX export.
 import { AnnaAppRuntime } from "/static/anna-apps/_sdk/latest/index.js";
+import { CONTENT_SLIDES, buildPrompt, extractJson, normalizeDeck } from "./deck-utils.js";
 
-const TOOL_ID = "tool-dev-focus-flow";
-const SLIDE_COUNT = 5;
+// Resolved at publish time from bundle/anna-tool-ids.js (window global set by
+// the auto-generated sidecar); the fallback is the local `anna-app dev` id.
+const TOOL_ID =
+  (typeof window !== "undefined" &&
+    window.__ANNA_TOOL_IDS__ &&
+    window.__ANNA_TOOL_IDS__["focus-flow"]) ||
+  "tool-dev-focus-flow";
 
 const statusEl = document.getElementById("status");
 const topicEl = document.getElementById("topic");
@@ -32,80 +39,6 @@ async function main() {
 }
 
 // ── LLM ──────────────────────────────────────────────────────
-
-function buildPrompt(topic, extra) {
-  const user = [
-    `请为演示文稿主题“${topic}”生成结构化内容。`,
-    extra ? `补充要求：${extra}` : "",
-    `严格输出一个 JSON 对象（不要输出任何其他文字、不要 markdown 代码块），格式：`,
-    `{"title":"演示文稿标题","subtitle":"一句话副标题","slides":[{"title":"页面标题","bullets":["要点1","要点2","要点3"]}]}`,
-    `要求：slides 必须恰好 ${SLIDE_COUNT} 个；每页 bullets 3-5 条，每条不超过 40 字；内容准确、简洁、适合演示。`,
-  ].filter(Boolean).join("\n");
-  return {
-    systemPrompt:
-      "你是专业的演示文稿策划。你只输出合法 JSON，不输出任何解释性文字。",
-    messages: [{ role: "user", content: { type: "text", text: user } }],
-    maxTokens: 2000,
-    temperature: 0.7,
-  };
-}
-
-// Extract the first balanced {...} block and parse it; throws on failure.
-function extractJson(text) {
-  const start = text.indexOf("{");
-  if (start === -1) throw new Error("模型输出中没有 JSON 对象");
-  let depth = 0;
-  let inStr = false;
-  let esc = false;
-  for (let i = start; i < text.length; i++) {
-    const c = text[i];
-    if (inStr) {
-      if (esc) esc = false;
-      else if (c === "\\") esc = true;
-      else if (c === '"') inStr = false;
-      continue;
-    }
-    if (c === '"') inStr = true;
-    else if (c === "{") depth++;
-    else if (c === "}") {
-      depth--;
-      if (depth === 0) {
-        const candidate = text.slice(start, i + 1);
-        try {
-          return JSON.parse(candidate);
-        } catch (e) {
-          throw new Error("JSON 解析失败：" + e.message);
-        }
-      }
-    }
-  }
-  throw new Error("模型输出的 JSON 不完整");
-}
-
-// Normalize whatever the model returned into a well-formed deck;
-// throws Error with a user-facing message when unrecoverable.
-function normalizeDeck(raw) {
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("模型输出格式异常：不是 JSON 对象");
-  }
-  const t = (v, limit) => (v == null ? "" : String(v).trim().slice(0, limit));
-  const title = t(raw.title, 120) || "未命名演示文稿";
-  const subtitle = t(raw.subtitle, 200);
-  let slides = Array.isArray(raw.slides) ? raw.slides : [];
-  slides = slides.filter((s) => s && typeof s === "object");
-  if (slides.length === 0) throw new Error("模型输出格式异常：缺少 slides");
-  const norm = slides.slice(0, SLIDE_COUNT).map((s, i) => {
-    let bullets = Array.isArray(s.bullets) ? s.bullets : s.bullets == null ? [] : [s.bullets];
-    return {
-      title: t(s.title, 120) || `第 ${i + 1} 页`,
-      bullets: bullets.map((b) => t(b, 200)).filter(Boolean).slice(0, 6),
-    };
-  });
-  while (norm.length < SLIDE_COUNT) {
-    norm.push({ title: `第 ${norm.length + 1} 页`, bullets: [] });
-  }
-  return { title, subtitle, slides: norm };
-}
 
 async function generateDeck(topic, extra) {
   const req = buildPrompt(topic, extra);
@@ -141,14 +74,36 @@ async function generateDeck(topic, extra) {
 
 // ── Preview / editing ────────────────────────────────────────
 
+// One card per PPTX page: cover (title/subtitle) + content slides,
+// so the preview matches the exported file 1:1.
 function renderPreview() {
   previewEl.replaceChildren();
+
+  const cover = document.createElement("div");
+  cover.className = "slide-card";
+  const coverNum = document.createElement("div");
+  coverNum.className = "num";
+  coverNum.textContent = "封面（第 1 页）";
+  const coverTitle = document.createElement("input");
+  coverTitle.type = "text";
+  coverTitle.value = deck.title;
+  coverTitle.addEventListener("input", () => (deck.title = coverTitle.value));
+  const coverSub = document.createElement("textarea");
+  coverSub.rows = 2;
+  coverSub.value = deck.subtitle;
+  coverSub.placeholder = "副标题（可选）";
+  coverSub.addEventListener("input", () => (deck.subtitle = coverSub.value));
+  cover.append(coverNum, coverTitle, coverSub);
+  previewEl.appendChild(cover);
+
+  const pageLabel = (i) =>
+    i < CONTENT_SLIDES - 1 ? `正文（第 ${i + 2} 页）` : `总结（第 ${CONTENT_SLIDES + 1} 页）`;
   deck.slides.forEach((s, i) => {
     const card = document.createElement("div");
     card.className = "slide-card";
     const num = document.createElement("div");
     num.className = "num";
-    num.textContent = `第 ${i + 1} 页`;
+    num.textContent = pageLabel(i);
     const title = document.createElement("input");
     title.type = "text";
     title.value = s.title;
@@ -180,7 +135,7 @@ genBtn.addEventListener("click", async () => {
     deck = await generateDeck(topic, extraEl.value.trim());
     renderPreview();
     exportBtn.disabled = false;
-    setStatus(`已生成“${deck.title}”（${deck.slides.length} 页），可编辑后导出。`);
+    setStatus(`已生成“${deck.title}”（共 ${deck.slides.length + 1} 页：封面 + ${deck.slides.length} 内容页），可编辑后导出。`);
   } catch (e) {
     deck = null;
     previewEl.replaceChildren();

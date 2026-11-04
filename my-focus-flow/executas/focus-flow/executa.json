@@ -1,0 +1,9 @@
+{
+  "slug": "focus-flow",
+  "name": "focus-flow",
+  "version": "0.1.0",
+  "executa_type": "tool",
+  "description": "focus-flow Anna App 的 Python Executa：deck JSON 校验、python-pptx 渲染 PPTX、APS 文件上传。",
+  "tool_id": "tool-dev-focus-flow",
+  "type": "python"
+}

@@ -3,7 +3,8 @@
   "host_capabilities": ["aps.files"],
   "required_executas": [
     {
-      "tool_id": "tool-dev-focus-flow"
+      "tool_id": "bundled:focus-flow",
+      "version": "latest"
     }
   ],
   "tags": ["focus-flow"],
@@ -23,7 +24,7 @@
       }
     ],
     "host_api": {
-      "tools": ["tool-dev-focus-flow"],
+      "tools": ["required:*"],
       "storage": ["get", "set"],
       "files": ["download"],
       "llm": ["complete"],

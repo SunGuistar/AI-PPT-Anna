@@ -8,6 +8,9 @@ import urllib.request
 MANIFEST = {
     "name": "tool-dev-focus-flow",
     "version": "0.1.0",
+    # Declares the reverse-RPC host capabilities this plugin uses, so the
+    # platform mints a plugin storage_token (APS files) in production.
+    "host_capabilities": ["aps.files"],
     "tools": [
         {
             "name": "ping",

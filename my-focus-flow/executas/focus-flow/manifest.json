@@ -1,0 +1,44 @@
+{
+  "name": "tool-dev-focus-flow",
+  "version": "0.1.0",
+  "host_capabilities": [
+    "aps.files"
+  ],
+  "tools": [
+    {
+      "name": "ping",
+      "description": "Smoke-test method.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "create_pptx",
+      "description": "Generate a fixed two-slide PPTX with python-pptx, upload it to the app's APS file scope via reverse-RPC, and return the APS path for the frontend to download.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "export_pptx",
+      "description": "Render a deck JSON ({title, subtitle?, slides:[{title, bullets:[str]}]}) into a uniformly styled PPTX with python-pptx, upload it to the app's APS file scope, and return the APS path for the frontend to download.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "deck": {
+            "type": "object",
+            "description": "Deck content produced by the LLM and edited by the user."
+          }
+        },
+        "required": [
+          "deck"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

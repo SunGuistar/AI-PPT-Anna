@@ -2,3 +2,5 @@
 __pycache__/
 *.pyc
 *.egg-info/
+bundle/anna-tool-ids.js
+.anna/app.json
