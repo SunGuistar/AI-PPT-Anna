@@ -64,7 +64,13 @@ var SlideForgeAI = (function () {
     var end = t.lastIndexOf("}");
     if (start === -1 || end === -1 || end < start) return null;
     var cand = t.slice(start, end + 1);
-    try { return JSON.parse(cand); } catch (e) { return null; }
+    try { return JSON.parse(cand); } catch (e) {
+      // lenient parse: raw newlines inside strings / trailing commas
+      try {
+        var fixed = cand.replace(/,\s*([}\]])/g, "$1").replace(/[\r\n\t]+/g, " ");
+        return JSON.parse(fixed);
+      } catch (e2) { return null; }
+    }
   }
 
   /** Normalize AI output into a validated slide deck. */
