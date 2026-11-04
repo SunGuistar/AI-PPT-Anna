@@ -35,7 +35,7 @@
       try {
         var mod = await import("/static/anna-apps/_sdk/latest/index.js");
         anna = await mod.AnnaAppRuntime.connect();
-        try { await anna.window.set_title({ title: "focus-flow · SlideForge" }); } catch (e) {}
+        try { await anna.window.set_title({ title: "AIppt" }); } catch (e) {}
         return true;
       } catch (e) {
         anna = null;
@@ -56,6 +56,7 @@
       "Number of slides: " + Math.max(3, Math.min(20, (options && options.slideCount) || 8)),
       "Audience: " + ((options && options.audience) || "general audience"),
       "Tone: " + ((options && options.tone) || "professional"),
+      (options && options.extra) ? "Additional requirements: " + options.extra : "",
       'JSON schema: {"slides":[{"title":string,"content":[3-6 short strings],"notes":string}],"theme":{"name":string,"accent":hex,"gradient":"linear-gradient(...)","headingFont":string,"bodyFont":string}}',
       "Slide 1 is the title slide (content[0]=subtitle, content[1]=author line); last slide is a closing slide. Match theme colors to the topic. No markdown fences."
     ].join("\n");

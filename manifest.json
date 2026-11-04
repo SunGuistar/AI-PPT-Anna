@@ -1,7 +1,10 @@
 {
   "schema": 2,
   "required_executas": [],
-  "tags": ["focus-flow", "ai-ppt"],
+  "tags": [
+    "focus-flow",
+    "ai-ppt"
+  ],
   "ui": {
     "bundle": {
       "format": "static-spa",
@@ -11,17 +14,36 @@
     "views": [
       {
         "name": "main",
-        "title": "focus-flow · AI PPT",
+        "title": "AIppt",
         "default": true,
-        "default_size": { "w": 1024, "h": 768 },
-        "min_size": { "w": 640, "h": 480 }
+        "default_size": {
+          "w": 1024,
+          "h": 768
+        },
+        "min_size": {
+          "w": 640,
+          "h": 480
+        },
+        "icon": "assets/favicon.ico"
       }
     ],
     "host_api": {
-      "storage": ["get", "set"],
-      "files": ["upload_init", "upload_finalize", "download"],
-      "llm": ["complete"],
-      "window": ["set_title", "ready"]
+      "storage": [
+        "get",
+        "set"
+      ],
+      "files": [
+        "upload_init",
+        "upload_finalize",
+        "download"
+      ],
+      "llm": [
+        "complete"
+      ],
+      "window": [
+        "set_title",
+        "ready"
+      ]
     },
     "csp_overrides": {},
     "state_merge": "last_writer_wins"

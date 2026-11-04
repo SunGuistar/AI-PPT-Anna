@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>focus-flow · AI PPT</title>
+  <title>AIppt · AI 演示文稿</title>
+  <link rel="icon" href="assets/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -11,11 +12,11 @@
 
   <!-- ================= Header ================= -->
   <header class="sf-header" role="banner">
-    <a class="sf-brand" href="#top" aria-label="focus-flow home">
-      <img src="assets/logo.png" alt="SlideForge logo" width="44" height="44">
+    <a class="sf-brand" href="#top" aria-label="AIppt home">
+      <img src="assets/logo.png" alt="AIppt logo" width="44" height="44">
       <span>
-        <span class="sf-brand-name">focus-flow</span>
-        <span class="sf-brand-tag">AI PPT · Powered by SlideForge (MIT)</span>
+        <span class="sf-brand-name">AIppt</span>
+        <span class="sf-brand-tag">AI 演示文稿生成 · Powered by SlideForge (MIT)</span>
       </span>
     </a>
   </header>
@@ -30,17 +31,27 @@
     <section class="sf-form-card" aria-label="Deck generator">
       <h2>创建你的演示文稿</h2>
       <form id="sf-form" class="sf-form-row">
-        <input class="sf-input" id="sf-topic" type="text" placeholder="例如：人工智能在教育中的应用" required aria-label="Presentation topic">
-        <input class="sf-input" id="sf-count" type="number" min="3" max="20" value="5" style="max-width:90px;" aria-label="Number of slides">
-        <input class="sf-input" id="sf-audience" type="text" placeholder="受众（可选）" aria-label="Target audience">
-        <select class="sf-select" id="sf-tone" aria-label="Tone">
+        <input class="sf-input sf-topic" id="sf-topic" type="text"
+               placeholder="PPT 主题，例如：人工智能在教育领域的应用"
+               required aria-label="PPT 主题">
+        <input class="sf-input" id="sf-count" type="number" min="3" max="20" value="5"
+               placeholder="页数" title="PPT 页数，例如：8 页" aria-label="PPT 页数，例如 8 页"
+               style="max-width:90px;">
+        <input class="sf-input" id="sf-audience" type="text"
+               placeholder="目标受众，例如：大学生、企业管理者"
+               aria-label="目标受众">
+        <select class="sf-select" id="sf-tone" aria-label="演讲语气，例如：专业、简洁、轻松"
+                title="演讲语气，例如：专业、简洁、轻松">
           <option value="professional">语气：专业</option>
           <option value="casual">语气：轻松</option>
           <option value="academic">语气：学术</option>
           <option value="persuasive">语气：说服</option>
           <option value="educational">语气：科普</option>
         </select>
-        <button class="sf-btn sf-btn-primary" id="sf-generate-btn" type="submit">生成幻灯片 &#9889;</button>
+        <button class="sf-btn sf-btn-primary" id="sf-generate-btn" type="submit">生成 PPT &#9889;</button>
+        <textarea class="sf-input sf-extra" id="sf-extra" rows="3"
+          placeholder="补充说明（可选）：请输入对 PPT 的补充要求，例如重点介绍哪些内容、希望采用什么风格、是否需要案例或总结等……"
+          aria-label="补充说明"></textarea>
       </form>
       <div class="sf-chips" aria-label="Example topics">
         <button class="sf-example" type="button" data-topic="人工智能在教育中的应用">试试：AI 教育</button>
@@ -64,7 +75,7 @@
 
   <!-- ================= Footer ================= -->
   <footer class="sf-footer" role="contentinfo">
-    <span>UI based on <a href="https://github.com/vincenzo-afk/SlideForge" target="_blank" rel="noopener">SlideForge</a> &middot; MIT License &middot; AI by Anna Platform</span>
+    <span>AIppt · UI based on <a href="https://github.com/vincenzo-afk/SlideForge" target="_blank" rel="noopener">SlideForge</a> &middot; MIT License &middot; AI by Anna Platform</span>
   </footer>
 
   <!-- ===== Scripts (order matters, no bundler) ===== -->

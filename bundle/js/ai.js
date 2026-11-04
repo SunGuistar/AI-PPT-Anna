@@ -72,7 +72,7 @@ var SlideForgeAI = (function () {
     var deck = null;
     try { deck = JSON.parse(raw); } catch (e) { deck = extractJSON(raw); }
     if (!deck || !Array.isArray(deck.slides) || !deck.slides.length) {
-      throw new Error("The AI returned no slides. Please try again.");
+      throw new Error("AI 未返回幻灯片内容，请重试。");
     }
 
     var slides = deck.slides.map(function (s, i) {
@@ -103,7 +103,7 @@ var SlideForgeAI = (function () {
 
   async function callGemini(prompt) {
     if (!SlideForgeConfig.GEMINI_API_KEY) {
-      throw new Error("No Gemini API key set. Open js/config.js and add your GEMINI_API_KEY (free at https://aistudio.google.com/app/apikey).");
+      throw new Error("未配置 Gemini API Key（Anna 平台内请使用 Anna AI 适配层）。");
     }
     var url = "https://generativelanguage.googleapis.com/v1beta/models/" +
       SlideForgeConfig.GEMINI_MODEL + ":generateContent?key=" +
@@ -118,19 +118,19 @@ var SlideForgeAI = (function () {
     });
     if (!res.ok) {
       var err = await res.text();
-      throw new Error("Gemini error " + res.status + ": " + err.slice(0, 200));
+      throw new Error("AI 接口错误 " + res.status + ": " + err.slice(0, 200));
     }
     var data = await res.json();
     var text = (data.candidates || [])[0];
     if (!text || !text.content || !text.content.parts || !text.content.parts[0]) {
-      throw new Error("Gemini returned an empty response (safety filter?). Try rephrasing.");
+      throw new Error("AI 返回了空内容（可能触发安全过滤），请调整措辞重试。");
     }
     return text.content.parts[0].text;
   }
 
   async function callOpenAI(prompt) {
     if (!SlideForgeConfig.OPENAI_API_KEY) {
-      throw new Error("No OpenAI-compatible API key set. Open js/config.js and add your OPENAI_API_KEY / endpoint.");
+      throw new Error("未配置 OpenAI 兼容接口 Key（Anna 平台内请使用 Anna AI 适配层）。");
     }
     var res = await fetch(SlideForgeConfig.OPENAI_BASE_URL.replace(/\/+$/, "") + "/chat/completions", {
       method: "POST",
@@ -150,11 +150,11 @@ var SlideForgeAI = (function () {
     });
     if (!res.ok) {
       var err = await res.text();
-      throw new Error("OpenAI-compat error " + res.status + ": " + err.slice(0, 200));
+      throw new Error("AI 接口错误 " + res.status + ": " + err.slice(0, 200));
     }
     var data = await res.json();
     var content = (data.choices || [])[0] && data.choices[0].message && data.choices[0].message.content;
-    if (!content) throw new Error("API returned an empty response. Please try again.");
+    if (!content) throw new Error("AI 返回了空内容，请重试。");
     return content;
   }
 

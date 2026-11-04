@@ -89,20 +89,20 @@ var SlideForgeSlides = (function () {
       b.addEventListener("click", handler);
       return b;
     };
-    tb.appendChild(btn("\u25C0 Prev", "sf-btn-nav", function () { navigate(-1); }));
-    tb.appendChild(btn("\u270E Edit", "sf-btn-ghost", function () { SlideForgeEditor.toggleEdit(); }));
-    tb.appendChild(btn("+ Slide", "sf-btn-ghost", function () { SlideForgeEditor.addSlide(); }));
-    tb.appendChild(btn("\u2699 Theme", "sf-btn-ghost", function () { cycleTheme(); }));
-    tb.appendChild(btn("\u25B6 Next", "sf-btn-nav", function () { navigate(1); }));
+    tb.appendChild(btn("\u25C0 上一页", "sf-btn-nav", function () { navigate(-1); }));
+    tb.appendChild(btn("\u270E 编辑", "sf-btn-ghost", function () { SlideForgeEditor.toggleEdit(); }));
+    tb.appendChild(btn("+ 添加页", "sf-btn-ghost", function () { SlideForgeEditor.addSlide(); }));
+    tb.appendChild(btn("\u2699 主题", "sf-btn-ghost", function () { cycleTheme(); }));
+    tb.appendChild(btn("\u25B6 下一页", "sf-btn-nav", function () { navigate(1); }));
 
     var counter = document.createElement("span");
     counter.className = "sf-counter";
     counter.textContent = (i + 1) + " / " + total;
     tb.appendChild(counter);
 
-    tb.appendChild(btn("\u2913 PDF", "sf-btn-action", function () { SlideForgeExport.printPDF(); }));
-    tb.appendChild(btn("\u2B73 PPTX", "sf-btn-action", function () { SlideForgeExport.downloadPPTX(); }));
-    tb.appendChild(btn("\u21B5 New", "sf-btn-ghost", function () { SlideForgeApp.goHome(); }));
+    tb.appendChild(btn("\u2913 下载 PDF", "sf-btn-action", function () { SlideForgeExport.printPDF(); }));
+    tb.appendChild(btn("\u2B73 下载 PPT", "sf-btn-action", function () { SlideForgeExport.downloadPPTX(); }));
+    tb.appendChild(btn("\u21B5 新建", "sf-btn-ghost", function () { SlideForgeApp.goHome(); }));
   }
 
   function render() {

@@ -75,14 +75,14 @@ button { font-family: inherit; }
 }
 .sf-hero h1 span { color: var(--sf-accent); }
 .sf-hero p.sf-lead {
-  max-width: 640px; margin: 0 auto; color: var(--sf-ui-muted);
+  max-width: 860px; margin: 0 auto; color: var(--sf-ui-muted);
   font-size: clamp(1rem, 2vw, 1.15rem); line-height: 1.6;
 }
 .sf-logo-hero { width: 130px; height: 130px; border-radius: 28px; box-shadow: var(--sf-shadow); }
 
 /* ---------- Generator form ---------- */
 .sf-form-card {
-  max-width: 680px; margin: -24px auto 48px; background: var(--sf-surface-strong);
+  max-width: 960px; margin: -24px auto 48px; background: var(--sf-surface-strong);
   border: 1px solid var(--sf-border); border-radius: var(--sf-radius);
   padding: 26px; box-shadow: var(--sf-shadow);
 }
@@ -96,6 +96,14 @@ button { font-family: inherit; }
 .sf-input:focus, .sf-select:focus { outline: 2px solid var(--sf-accent); outline-offset: 1px; }
 .sf-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2394a3b8' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 14px center; padding-right: 34px; }
+
+
+/* 主题输入框优先伸展；补充说明占满整行 */
+.sf-form-row .sf-topic { flex: 2 1 360px; }
+.sf-form-row .sf-extra {
+  flex: 1 1 100%; min-width: 100%; resize: vertical; line-height: 1.5;
+  font-family: inherit; margin-top: 2px;
+}
 
 .sf-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
 .sf-example {
@@ -124,7 +132,7 @@ button { font-family: inherit; }
 .sf-feature .sf-feat-icon { font-size: 1.6rem; margin-bottom: 10px; display: block; }
 
 /* ---------- Recent decks ---------- */
-.sf-recent { max-width: 680px; margin: 0 auto 56px; padding: 0 24px; }
+.sf-recent { max-width: 960px; margin: 0 auto 56px; padding: 0 24px; }
 .sf-recent h3 { margin: 0 0 12px; font-size: 1.05rem; color: var(--sf-ui-muted); }
 .sf-saved-btn {
   appearance: none; display: block; width: 100%; text-align: left;

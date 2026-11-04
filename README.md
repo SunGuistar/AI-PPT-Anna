@@ -1,6 +1,6 @@
-# focus-flow · AI PPT
+# AIppt
 
-基于 Anna 平台的**纯前端** AI 演示文稿应用：输入主题、页数、受众与语气，Anna AI 生成完整幻灯片（含主题配色），支持逐页预览、内联文字编辑、增删/排序幻灯片、切换主题，一键导出可在 PowerPoint / WPS 中继续编辑的 PPTX。
+基于 Anna 平台的**纯前端** AI 演示文稿应用 AIppt：输入主题、页数、受众与语气，Anna AI 生成完整幻灯片（含主题配色），支持逐页预览、内联文字编辑、增删/排序幻灯片、切换主题，一键导出可在 PowerPoint / WPS 中继续编辑的 PPTX。
 
 - **纯前端**：原生 HTML/CSS/JavaScript，零依赖、零构建，无任何后端或插件
 - **AI**：Anna Host API `anna.llm.complete`

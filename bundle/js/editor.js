@@ -79,8 +79,8 @@ var SlideForgeEditor = (function () {
     var deck = SlideForgeSlides.getDeck();
     var i = SlideForgeSlides.getIndex();
     deck.slides.splice(i + 1, 0, {
-      title: "New Slide",
-      content: ["Click \u270E Edit to change this text", "Add your key points here", "Keep bullets concise"],
+      title: "新页面",
+      content: ["Click \u270E Edit to change this text", "在这里添加你的要点", "保持每条要点简洁"],
       notes: ""
     });
     save();
@@ -100,10 +100,10 @@ var SlideForgeEditor = (function () {
   function deleteSlide() {
     var deck = SlideForgeSlides.getDeck();
     if (deck.slides.length <= 3) {
-      alert("A deck needs at least 3 slides.");
+      alert("演示文稿至少需要 3 页。");
       return;
     }
-    if (!confirm("Delete this slide?")) return;
+    if (!confirm("确定删除这一页吗？")) return;
     var i = SlideForgeSlides.getIndex();
     deck.slides.splice(i, 1);
     save();

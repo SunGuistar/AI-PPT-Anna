@@ -24,24 +24,25 @@ var SlideForgeApp = (function () {
     var count = parseInt($("#sf-count").value, 10) || 8;
     var audience = ($("#sf-audience").value || "").trim();
     var tone = ($("#sf-tone").value || "");
+    var extra = ($("#sf-extra") && $("#sf-extra").value || "").trim();
 
     var btn = $("#sf-generate-btn");
     btn.disabled = true;
-    btn.textContent = "Forging your slides...";
-    showStatus("Calling the AI — this takes a few seconds...");
+    btn.textContent = "正在生成 PPT…";
+    showStatus("正在调用 Anna AI 生成内容，请稍候…");
 
     try {
-      var deck = await SlideForgeAI.generateDeck(topic, { slideCount: count, audience: audience, tone: tone });
+      var deck = await SlideForgeAI.generateDeck(topic, { slideCount: count, audience: audience, tone: tone, extra: extra });
       SlideForgeEditor.save();
       SlideForgeSlides.loadDeck(deck);
       location.hash = "#editor";
       renderEditor();
-      showStatus("Deck forged! Use arrow keys, click \u270E Edit, or export.");
+      showStatus("生成完成！可翻页预览、点「编辑」修改文字，或点「下载 PPT」导出。");
     } catch (err) {
-      showStatus("Error: " + err.message, true);
+      showStatus("出错：" + err.message, true);
     } finally {
       btn.disabled = false;
-      btn.textContent = "Forge Slides \u26A1";
+      btn.textContent = "生成 PPT ⚡";
     }
   }
 
@@ -53,7 +54,7 @@ var SlideForgeApp = (function () {
     box.innerHTML = "";
     if (decks.length) {
       var h = document.createElement("h3");
-      h.textContent = "Recent decks";
+      h.textContent = "最近生成的文稿";
       box.appendChild(h);
       decks.forEach(function (d) {
         var b = document.createElement("button");

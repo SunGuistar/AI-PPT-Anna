@@ -18,7 +18,7 @@ var SlideForgeExport = (function () {
     var deck = SlideForgeSlides.getDeck();
     if (!deck) return;
     var w = window.open("", "_blank", "width=1000,height=800");
-    if (!w) { alert("Please allow popups to export PDF."); return; }
+    if (!w) { alert("请允许弹出窗口以下载 PDF。"); return; }
     var accent = deck.theme.accent, fg = deck.theme.fg, bg = deck.theme.bg;
     var hf = deck.theme.headingFont, bf = deck.theme.bodyFont;
     var slidesHtml = deck.slides.map(function (s) {
@@ -510,7 +510,12 @@ var SlideForgeExport = (function () {
     entries.push({ name: "ppt/slideLayouts/slideLayout1.xml", data: strToBytes(layout), crc: crc32(strToBytes(layout)) });
 
     var zip = buildZip(entries);
-    var filename = (deck.topic || "slideforge-deck").replace(/[^a-z0-9]+/gi, "-").toLowerCase().slice(0, 60) + ".pptx";
+    function safeName(t) {
+      var n = (t || "").replace(/[\\/:*?"<>|]/g, "-").replace(/\s+/g, " ").trim();
+      if (!n) n = "AIppt";
+      return Array.from(n).slice(0, 60).join("");
+    }
+    var filename = safeName(deck.topic) + ".pptx";
     // --- Anna 适配（PoC）：宿主内走官方 APS 交付；独立打开时回退原生下载 ---
     if (window.AnnaBridge && AnnaBridge.connected()) {
       AnnaBridge.deliverPPTX(zip, filename).catch(function (e) {
