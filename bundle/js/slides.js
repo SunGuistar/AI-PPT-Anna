@@ -100,7 +100,6 @@ var SlideForgeSlides = (function () {
     counter.textContent = (i + 1) + " / " + total;
     tb.appendChild(counter);
 
-    tb.appendChild(btn("\u2913 下载 PDF", "sf-btn-action", function () { SlideForgeExport.printPDF(); }));
     tb.appendChild(btn("\u2B73 下载 PPT", "sf-btn-action", function () { SlideForgeExport.downloadPPTX(); }));
     tb.appendChild(btn("\u21B5 新建", "sf-btn-ghost", function () { SlideForgeApp.goHome(); }));
   }
