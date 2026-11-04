@@ -199,5 +199,13 @@ check("e2e: 更新失败保留原大纲（仍 5 页，内容不变）",
   st.outline.slides.length === 5 && JSON.stringify(st.outline.slides) === beforeSlides);
 check("e2e: AI 失败仍计 1 次尝试（共 3）", aiCalls === 3, `(${aiCalls})`);
 
+// 主题字段级合并：AI 返回不完整 theme 时不丢失旧样式
+aiResponder = () => JSON.stringify({ slides: FIXED_OUTLINE.slides, theme: { name: "AI 改名" } });
+byId["sf-outline-feedback"].value = "换个主题名";
+await byId["sf-outline-update"]._l["click"][0]();
+st = vm.runInContext("SlideForgeApp._state()", ctx);
+check("e2e: theme 合并——name 更新、accent 保留",
+  st.outline.theme.name === "AI 改名" && st.outline.theme.accent === "#00D4FF");
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
