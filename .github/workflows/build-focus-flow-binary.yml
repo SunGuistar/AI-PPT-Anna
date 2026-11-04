@@ -66,19 +66,29 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      # Use the system python (pip-installed PyInstaller) rather than a
-      # uv-managed python-build-standalone interpreter: the standalone
-      # runtime statically links libpython and inflates the onefile binary
-      # far beyond the platform's ~20 MiB download ceiling.
-      - name: Install build dependencies
+      # The onefile binary must stay under the platform's ~20 MiB download
+      # ceiling. setup-python (and uv) ship python-build-standalone builds
+      # whose statically-linked libpython inflates the Linux binary to
+      # ~33 MB; the distro's dynamic /usr/bin/python3 produces ~19 MB
+      # (matches the local Docker-verified build).
+      - name: Prepare system python (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq python3-pip
+          /usr/bin/python3 -m pip install --break-system-packages pyinstaller python-pptx
+          echo "PYINSTALLER_PYTHON=/usr/bin/python3" >> "$GITHUB_ENV"
+      - name: Prepare build dependencies (macOS / Windows)
+        if: matrix.os != 'ubuntu-latest'
         shell: bash
-        run: pip install pyinstaller python-pptx
+        run: |
+          pip install pyinstaller python-pptx
+          echo "PYINSTALLER_PYTHON=python" >> "$GITHUB_ENV"
       - name: Build binary archive
         working-directory: ${{ needs.meta.outputs.executa_dir }}
         env:
           TOOL_ID: ${{ needs.meta.outputs.tool_id }}
           PLATFORM: ${{ matrix.platform }}
-          PYINSTALLER_PYTHON: python
         shell: bash
         run: |
           chmod +x package_binary.sh
