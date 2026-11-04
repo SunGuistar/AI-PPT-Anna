@@ -32,6 +32,16 @@ var SlideForgeApp = (function () {
     if (btn) { btn.disabled = v; btn.textContent = v ? busyText : idleText; }
   }
 
+  // 主题字段级合并：AI 未提供/无效的字段沿用旧主题，避免整体替换丢样式
+  function mergeTheme(oldT, newT) {
+    if (!newT) return oldT;
+    var out = {};
+    ["name", "accent", "gradient", "bg", "fg", "headingFont", "bodyFont"].forEach(function (k) {
+      out[k] = newT[k] || (oldT && oldT[k]) || null;
+    });
+    return out;
+  }
+
   function showView(name) {
     phase = name;
     $("#sf-home").style.display = name === "input" ? "" : "none";
@@ -61,7 +71,7 @@ var SlideForgeApp = (function () {
       var text = await AnnaBridge.aiJson(SlideForgeOutline.buildInitialPrompt(initialRequest));
       if (seq !== requestSeq) return; // 过期响应
       var next = SlideForgeOutline.normalizeOutline(text);
-      outline = { slides: next.slides, theme: next.theme || (outline && outline.theme) || null };
+      outline = { slides: next.slides, theme: mergeTheme(outline && outline.theme, next.theme) };
       renderOutline();
       showView("outline");
       showStatus("大纲已生成，可直接修改，或输入补充要求后点「更新大纲」。");
@@ -159,7 +169,7 @@ var SlideForgeApp = (function () {
       var text = await AnnaBridge.aiJson(SlideForgeOutline.buildUpdatePrompt(initialRequest, outline, feedback));
       if (seq !== requestSeq) return;
       var next = SlideForgeOutline.normalizeOutline(text);
-      outline = { slides: next.slides, theme: next.theme || outline.theme };
+      outline = { slides: next.slides, theme: mergeTheme(outline.theme, next.theme) };
       renderOutline();
       $("#sf-outline-feedback").value = "";
       showStatus("大纲已更新（共 " + outline.slides.length + " 页）。");
